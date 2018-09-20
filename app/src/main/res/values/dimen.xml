@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="main_screen">15dp</dimen>
+    <dimen name="main_screen_button_height">55dp</dimen>
+    <dimen name="main_screen_button_width">120dp</dimen>
+
+</resources>

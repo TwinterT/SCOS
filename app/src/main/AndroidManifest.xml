@@ -1,20 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     package="es.source.code.activity">
 
+    <permission
+        android:name="scos.permission.ACCESSSCOS"
+        android:protectionLevel="dangerous" />
+
+    <!-- allowBackup为是否允许备份 -->
+    <!-- icon为应用图标设置 -->
+    <!-- label为app在手机屏幕上显示的名称 -->
+    <!-- supportsRtl表示是否支持阿拉伯语/波斯语这种从右往左的文字排列顺序 -->
+    <!-- theme用于指定该App的显示风格 -->
     <application
         android:allowBackup="true"
-        android:icon="@mipmap/ic_launcher"
+        android:icon="@drawable/launch"
         android:label="@string/app_name"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:roundIcon="@drawable/launch"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
+
+
         <activity android:name=".SCOSEntry">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
+        </activity>
+
+
+        <activity
+            android:name=".MainScreen"
+            android:permission="scos.permission.ACCESSSCOS"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="scos.intent.actioin.SCOSMAIN" />
+                <!-- default属性必须加，不然无法跳转至该Activity -->
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="scos.intent.category.SCOSLAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".LoginOrRegister"
+            android:windowSoftInputMode="adjustResize">
+
         </activity>
     </application>
 
