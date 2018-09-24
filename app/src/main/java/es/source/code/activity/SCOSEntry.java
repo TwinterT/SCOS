@@ -59,7 +59,7 @@ public class SCOSEntry extends AppCompatActivity implements View.OnTouchListener
             if(Math.abs(offsetX) > Math.abs(offsetY)) { //在X上的偏移大于Y上的偏移时，为左右滑动
                 if(offsetX > 0 ){ //此时为向左滑动
                     Intent intent = new Intent(MainScreen.MAINSCREEN_ACTION);
-                    intent.putExtra("data", "1FromEntry");
+                    intent.putExtra("data", "From_Entry");
                     startActivity(intent);
                 }
             }

@@ -2,69 +2,185 @@ package es.source.code.activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.GridView;
+import android.widget.ListAdapter;
+import android.widget.Toast;
 
-public class MainScreen extends AppCompatActivity implements View.OnClickListener{
+import java.lang.reflect.Array;
+import java.util.Arrays;
 
-    private Button button_order;
-    private Button button_watch_order;
-    private Button button_login;
-    private Button button_help;
-    //action字符串
+import es.source.code.model.User;
+
+public class MainScreen extends AppCompatActivity{
+
     public static final String MAINSCREEN_ACTION = "scos.intent.actioin.SCOSMAIN";
+    private final String[] Strings = {"点菜","查看订单","登录/注册","系统帮助"};
+    private final int[] images = {R.drawable.order, R.drawable.watch_order, R.drawable.login, R.drawable.help};
+    private int ORDER = 0;
+    private int WATCH_ORDER = 1;
+    private int LOGIN = 2;
+    private int HELP = 3;
+
+    private boolean canBeVisible = false;
+    private String[] mStrings;
+    private int[] mImages;
+    private Intent mIntent;
+    private User user;
+
+    GridView mGridView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
 
-        button_order = findViewById(R.id.order);
-        button_watch_order = findViewById(R.id.watch_order);
-        button_login = findViewById(R.id.login);
-        button_help = findViewById(R.id.help);
+        mIntent = getIntent();
 
-        button_login.setOnClickListener(this);
-
-        Intent intent = getIntent();
-        String get_from_intent = intent.getStringExtra("data");
-        if(get_from_intent!=null && !get_from_intent.equals("FromEntry"))
-        {
-            button_order.setVisibility(View.GONE);
-            button_watch_order.setVisibility(View.GONE);
+        //根据intent传递的字符串决定canBeVisible的值
+        String data = mIntent.getStringExtra("data");
+        if(data!=null && data.equals("FromEntry")){
+            canBeVisible = true;
         }
+
+        setMStringsAndMImages();
+        initGridViewListner();
+
+
     }
 
-    @Override
-    public void onClick(View v) {
-        if(v.getId() == button_login.getId()){ //转到Login界面
-            Intent intent_toLogin = new Intent(MainScreen.this, LoginOrRegister.class);
-            startActivityForResult(intent_toLogin, 0);  //0为向login的请求码
+    /**
+     * 根据canBeVisible来设置mStrings和mImages
+     */
+    private void setMStringsAndMImages(){
+        if(!canBeVisible){
+            mStrings = Arrays.copyOfRange(Strings, 2,4);
+            mImages = Arrays.copyOfRange(images,2,4);
+            ORDER = -1;
+            WATCH_ORDER = -1;
+            LOGIN = 0;
+            HELP = 1;
+        }else{
+            mStrings = Arrays.copyOf(Strings,Strings.length);
+            mImages = Arrays.copyOf(images,images.length);
+            ORDER = 0;
+            WATCH_ORDER = 1;
+            LOGIN = 2;
+            HELP = 3;
         }
+        initGridViewAdapter();
     }
+
+    /**
+     * 初始化GridView组件
+     */
+    private void initGridViewAdapter(){
+
+        mGridView = findViewById(R.id.main_screen_grid);
+
+        //为GridView组件设置适配器
+        mGridView.setAdapter(new BaseAdapter() {
+            @Override
+            public int getCount() {
+                return mStrings.length;
+            }
+
+            @Override
+            public Object getItem(int position) {
+                return mImages[position];
+            }
+
+            @Override
+            public long getItemId(int position) {
+                return position;
+            }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                View view = getLayoutInflater().inflate(R.layout.main_screen_grid_item, null);
+                Button btn = view.findViewById(R.id.main_screen_grid_item_button);
+                btn.setText(mStrings[position]);
+                Drawable drawable = getResources().getDrawable(mImages[position]);
+
+                //如果不设置bound图片将不会显示
+                drawable.setBounds(0, 0, 100, 100);
+                btn.setCompoundDrawables(null, drawable, null, null);
+                return view;
+            }
+        } );
+
+
+    }
+
+    private void initGridViewListner(){
+        //为GridView设置click监听器
+        mGridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                if(position == LOGIN){
+                    turnToLogin();
+                }else if(position == ORDER){
+                    turnToFoodView();
+                }else if(position == WATCH_ORDER){
+                    turnToWatchOrder();
+                }
+            }
+        });
+    }
+
+    /**
+     * 转到login界面
+     */
+    private void turnToLogin(){
+        Intent intent_toLogin = new Intent(MainScreen.this, LoginOrRegister.class);
+        startActivityForResult(intent_toLogin, 0);  //0为向login的请求码
+    }
+
+    private void turnToFoodView(){
+        Intent intent_toFoodView = new Intent(MainScreen.this, FoodView.class);
+        intent_toFoodView.putExtra("user",user);
+        startActivity(intent_toFoodView);
+    }
+
+    private  void turnToWatchOrder(){
+        Intent intent_toWatchOrder = new Intent(MainScreen.this, FoodOrderView.class);
+        intent_toWatchOrder.putExtra("user",user);
+        startActivity(intent_toWatchOrder);
+    }
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == 0){
-            if(resultCode == Activity.RESULT_OK){
-                String fromLogin = (data != null ? data.getStringExtra("data") : "null");
-                if(fromLogin.equals("LoginSuccess")){
-                    checkAndSetIsVisible();
-                }
-            }
+               Bundle bundle = data != null ? data.getExtras() : null;
+               if(bundle != null){
+                   String message = bundle.getString("data");
+                   if(message.equals("RegisterSuccess")){
+                       Toast.makeText(MainScreen.this,"欢迎您成为SCOS新用户",Toast.LENGTH_SHORT).show();
+                       user = (User)bundle.getSerializable("user");
+                       if(user == null) canBeVisible = false;
+                       else canBeVisible = true;
+                   }else if(message.equals("LoginSuccess")){
+                       user = (User)bundle.getSerializable("user");
+                       if(user == null) canBeVisible = false;
+                       else canBeVisible = true;
+                   }else{
+                       if(user == null) canBeVisible = false;
+                       else canBeVisible = true;
+                   }
+                   setMStringsAndMImages();
+               }
         }
     }
 
-    private void checkAndSetIsVisible()  //检查点菜和查看订单按钮时否被隐藏，如果被隐藏则显示
-    {
-        if(button_order.getVisibility() != View.VISIBLE || button_watch_order.getVisibility() != View.VISIBLE)
-        {
-            button_order.setVisibility(View.VISIBLE);
-            button_watch_order.setVisibility(View.VISIBLE);
-        }
-    }
+
 }

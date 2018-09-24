@@ -8,4 +8,8 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="FoodView" parent="@android:style/Theme.Holo.Light">
+        <item name="android:actionBarStyle">@style/FoodView</item>
+    </style>
+    
 </resources>

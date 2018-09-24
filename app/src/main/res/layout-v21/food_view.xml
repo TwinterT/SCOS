@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".FoodView"
+    android:touchscreenBlocksFocus="true">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/food_view_toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="?attr/actionBarSize"
+        android:background="?attr/colorAccent"
+        android:elevation="4dp"
+        android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+        android:theme="@style/ThemeOverlay.AppCompat.ActionBar">
+
+
+    </android.support.v7.widget.Toolbar>
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/food_view_viewPager"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="none">
+
+    </android.support.v4.view.ViewPager>
+
+    <android.support.design.widget.TabLayout
+        android:id="@+id/food_view_tabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#BDC3C7"
+        app:tabGravity="fill"
+        app:tabIndicatorHeight="0dp"
+        app:tabMode="fixed"
+        app:tabSelectedTextColor="#ffffff"
+        app:tabTextColor="#000">
+
+
+        <android.support.design.widget.TabItem
+            android:id="@+id/food_item_coldDish"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:icon="@drawable/order"
+            android:text="凉菜"
+            android:visibility="visible" />
+
+        <android.support.design.widget.TabItem
+            android:id="@+id/food_item_hotDish"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:icon="@drawable/watch_order"
+            android:text="热菜"
+            android:visibility="visible" />
+
+        <android.support.design.widget.TabItem
+            android:id="@+id/food_item_seefood"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:icon="@drawable/login"
+            android:text="海鲜"
+            android:visibility="visible" />
+
+        <android.support.design.widget.TabItem
+            android:id="@+id/food_item_drinks"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:icon="@drawable/help"
+            android:text="酒水"
+            android:visibility="visible" />
+
+    </android.support.design.widget.TabLayout>
+</LinearLayout>

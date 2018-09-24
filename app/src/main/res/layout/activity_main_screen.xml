@@ -1,62 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_screen"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
     android:orientation="vertical"
-    android:background="@color/main_screen_color"
     tools:context=".MainScreen">
 
 
-    <Button
-        android:id="@+id/order"
-        android:layout_width="@dimen/main_screen_button_width"
-        android:layout_height="@dimen/main_screen_button_height"
-        android:drawableLeft="@drawable/order"
-        android:layout_marginBottom="@dimen/main_screen"
-        android:text="@string/order"
-        android:drawableStart="@drawable/order" />
-
-    <Button
-        android:id="@+id/watch_order"
-        android:layout_width="@dimen/main_screen_button_width"
-        android:layout_height="@dimen/main_screen_button_height"
-        android:layout_marginBottom="@dimen/main_screen"
-        android:layout_marginTop="@dimen/main_screen"
-        android:drawableLeft="@drawable/watch_order"
-        android:text="@string/watch_order"
-        app:layout_constraintBottom_toTopOf="@+id/login_or_register_Button_login"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        android:drawableStart="@drawable/watch_order" />
-
-    <Button
-        android:id="@+id/login"
-        android:layout_width="@dimen/main_screen_button_width"
-        android:layout_height="@dimen/main_screen_button_height"
-        android:layout_marginBottom="@dimen/main_screen"
-        android:layout_marginTop="@dimen/main_screen"
-        android:drawableLeft="@drawable/login"
-        android:text="@string/login"
-        app:layout_constraintBottom_toTopOf="@+id/button"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        android:drawableStart="@drawable/login" />
-
-    <Button
-        android:id="@+id/help"
-        android:layout_width="@dimen/main_screen_button_width"
-        android:layout_height="@dimen/main_screen_button_height"
-        android:layout_marginTop="@dimen/main_screen"
-        android:drawableLeft="@drawable/help"
-        android:text="@string/help"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/button"
-        android:drawableStart="@drawable/help" />
-
-</LinearLayout>
+    <GridView
+        android:id="@+id/main_screen_grid"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:columnWidth="150dp"
+        android:numColumns="2"
+        android:stretchMode="spacingWidthUniform" />
+</RelativeLayout>

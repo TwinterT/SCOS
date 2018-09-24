@@ -12,10 +12,13 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import es.source.code.model.User;
 
 public class LoginOrRegister extends AppCompatActivity implements View.OnClickListener{
 
@@ -24,6 +27,7 @@ public class LoginOrRegister extends AppCompatActivity implements View.OnClickLi
     private Button login;
     private Button back;
     private Intent mIntent;
+    private TextView register;
 
     private ProgressDialog mProgressDialog;
 
@@ -37,6 +41,9 @@ public class LoginOrRegister extends AppCompatActivity implements View.OnClickLi
         password = findViewById(R.id.login_or_register_editText_password);
         login = findViewById(R.id.login_or_register_Button_login);
         back = findViewById(R.id.login_or_register_Button_return);
+        register = findViewById(R.id._or_register_textView_register);
+
+        Toast.makeText(LoginOrRegister.this, "如需注册请先输入用户名密码在点击下方注册按钮",Toast.LENGTH_LONG).show();
 
         //按照要求把密码栏和登录按钮不使能
         if("".equals(user_name.getText().toString())){
@@ -47,6 +54,7 @@ public class LoginOrRegister extends AppCompatActivity implements View.OnClickLi
         //登录和返回设置监听
         login.setOnClickListener(this);
         back.setOnClickListener(this);
+        register.setOnClickListener(this);
 
         user_name.addTextChangedListener(new TextWatcher() { //为username添加一个监听器
             @Override
@@ -164,6 +172,23 @@ public class LoginOrRegister extends AppCompatActivity implements View.OnClickLi
             setResult(Activity.RESULT_CANCELED, mIntent);
             finish();
 
+        }else if(v.getId() == register.getId()){
+            //当注册按钮被按下时
+            if(login.isEnabled()) {
+                User loginUser = new User();
+                loginUser.setUserName(user_name.getText().toString());
+                loginUser.setPassword(password.getText().toString());
+                loginUser.setOldUser(false);
+                Bundle bundle = new Bundle();
+                bundle.putSerializable("user", loginUser);
+                bundle.putString("data", "RegisterSuccess");
+                mIntent.putExtras(bundle);
+                setResult(Activity.RESULT_OK, mIntent);
+                Toast.makeText(LoginOrRegister.this, "注册成功", Toast.LENGTH_SHORT).show();
+                finish();
+            }else{
+                Toast.makeText(LoginOrRegister.this,"请输入正确的用户名和密码",Toast.LENGTH_SHORT).show();
+            }
         }
     }
 
@@ -175,8 +200,15 @@ public class LoginOrRegister extends AppCompatActivity implements View.OnClickLi
         public void run() {
             mProgressDialog.dismiss();
 
-            //登录成功 返回LoginSuccess字符串
-            mIntent.putExtra("data","LoginSuccess");
+            //登录成功 返回LoginSuccess字符串和User
+            User loginUser = new User();
+            loginUser.setUserName(user_name.getText().toString());
+            loginUser.setPassword(password.getText().toString());
+            loginUser.setOldUser(true);
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("user",loginUser);
+            bundle.putString("data","LoginSuccess");
+            mIntent.putExtras(bundle);
             setResult(Activity.RESULT_OK, mIntent);
             finish();
         }

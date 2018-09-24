@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".FoodOrderView">
+
+    <android.support.v4.view.ViewPager
+        android:id="@+id/food_order_viewpager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:scrollbars="none" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:orientation="horizontal">
+
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="菜品总数" />
+
+        <TextView
+            android:id="@+id/food_order_view_number"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="0" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="菜品总价" />
+
+        <TextView
+            android:id="@+id/food_order_view_total_price"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="0" />
+
+        <Button
+            android:id="@+id/food_order_view_buy"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="#3498DB"
+            android:text="提交订单"
+            android:textColor="#ffffff" />
+    </LinearLayout>
+
+    <android.support.design.widget.TabLayout
+        android:id="@+id/food_order_tablayout"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="#BDC3C7"
+        app:tabGravity="fill"
+        app:tabIndicatorHeight="0dp"
+        app:tabMode="fixed"
+        app:tabSelectedTextColor="#ffffff"
+        app:tabTextColor="#000">
+
+        <android.support.design.widget.TabItem
+            android:id="@+id/food_order_not_ordered"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="未下单菜"
+            android:visibility="visible"/>
+
+        <android.support.design.widget.TabItem
+            android:id="@+id/food_order_ordered"
+            android:layout_width="wrap_content"
+            android:layout_height="50dp"
+            android:text="已下单菜"
+            android:visibility="visible"/>
+
+    </android.support.design.widget.TabLayout>
+</LinearLayout>

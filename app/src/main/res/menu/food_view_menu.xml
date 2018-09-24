@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/food_view_already_ordered"
+        android:title="已点菜品"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/food_view_watch_ordered"
+        android:title="查看订单"
+        app:showAsAction="never"/>
+
+    <item
+        android:id="@+id/food_view_call_for_service"
+        android:title="呼叫服务"
+        app:showAsAction="never" />
+</menu>

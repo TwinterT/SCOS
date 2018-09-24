@@ -19,8 +19,6 @@
         android:roundIcon="@drawable/launch"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
-
         <activity android:name=".SCOSEntry">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -28,12 +26,11 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-
-
         <activity
             android:name=".MainScreen"
-            android:permission="scos.permission.ACCESSSCOS"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:permission="scos.permission.ACCESSSCOS">
             <intent-filter>
                 <action android:name="scos.intent.actioin.SCOSMAIN" />
                 <!-- default属性必须加，不然无法跳转至该Activity -->
@@ -41,10 +38,14 @@
                 <category android:name="scos.intent.category.SCOSLAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".LoginOrRegister"
-            android:windowSoftInputMode="adjustResize">
-
-        </activity>
+        <activity
+            android:name=".LoginOrRegister"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".FoodView"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+        <activity android:name=".FoodOrderView" />
+        <activity android:name=".FoodDetailed"></activity>
     </application>
 
 </manifest>
