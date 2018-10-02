@@ -1,5 +1,7 @@
 package es.source.code.model;
 
+import android.content.Intent;
+
 import java.io.Serializable;
 
 public class User implements Serializable{
@@ -107,6 +109,19 @@ public class User implements Serializable{
 
     public void setTagDrink(int pos , char data){
         tagDrink.setCharAt(pos,data);
+    }
+
+    public int getTagPositionHotFood(int pos){
+        return Integer.parseInt(""+tagHotFood.charAt(pos));
+    }
+    public int getTagPositionColdFood(int pos){
+        return Integer.parseInt(""+tagHotFood.charAt(pos));
+    }
+    public int getTagPositionSeeFood(int pos){
+        return Integer.parseInt(""+tagHotFood.charAt(pos));
+    }
+    public int getTagPositionDrink(int pos){
+        return Integer.parseInt(""+tagHotFood.charAt(pos));
     }
 
     public StringBuilder getTagHotFood() {

@@ -147,7 +147,7 @@ public class MainScreen extends AppCompatActivity{
     private void turnToFoodView(){
         Intent intent_toFoodView = new Intent(MainScreen.this, FoodView.class);
         intent_toFoodView.putExtra("user",user);
-        startActivity(intent_toFoodView);
+        startActivityForResult(intent_toFoodView,1);
     }
 
     private  void turnToWatchOrder(){
@@ -179,6 +179,8 @@ public class MainScreen extends AppCompatActivity{
                    }
                    setMStringsAndMImages();
                }
+        }else if(requestCode == 1){
+            user = (User)data.getSerializableExtra("user");
         }
     }
 

@@ -4,6 +4,7 @@ package es.source.code.activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
@@ -55,6 +56,8 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
     private Intent mIntent;
 
     private User user;
+
+    private boolean tag = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -136,11 +139,17 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
                 intent.putExtra("data",str);
                 intent.putExtra("pos",position);
                 intent.putExtra("tag",tag);
-                startActivity(intent);
+                intent.putExtra("user",user);
+                startActivityForResult(intent,1);
             }
         });
 
         listView.setAdapter(new BaseAdapter() {
+
+            @Override
+            public void notifyDataSetChanged() {
+                super.notifyDataSetChanged();
+            }
 
             @Override
             public int getCount() {
@@ -150,7 +159,7 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
 
             @Override
             public Object getItem(int position) {
-                return names[0];
+                return names[position];
             }
 
             @Override
@@ -174,6 +183,26 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
                 textView_price.setText(""+prices[position]+" 元");
 
                 final Button button = convertView.findViewById(R.id.order_item_button);
+                int k = 0;
+                if(parent == hotFoodListView){
+                    k = user.getTagPositionHotFood(position);
+                }else if(parent == coldFoodListView){
+                    k = user.getTagPositionColdFood(position);
+                }else if(parent == seeFoodListView){
+                    k = user.getTagPositionSeeFood(position);
+                }else if(parent == drinkListView){
+                    k = user.getTagPositionDrink(position);
+                }
+
+                if(k == 0){
+                    button.setText(ORDER);
+                    button.setTextColor(Color.BLACK);
+                }
+                else if(k==1){
+                    button.setText(UNSUBSCRIBE);
+                    button.setTextColor(Color.RED);
+                }
+
                 button.setOnClickListener(new View.OnClickListener() {
                     @Override
                     public void onClick(View v) {
@@ -190,7 +219,7 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
                             }
                             button.setText(UNSUBSCRIBE);
                             button.setTextColor(Color.RED);
-                        }else{
+                        }else if(button.getText().toString().equals(UNSUBSCRIBE)){
                             Toast.makeText(FoodView.this,"退点成功 " + getItemId(position),Toast.LENGTH_SHORT).show();
                             if(parent == hotFoodListView){
                                 user.setTagHotFood(position,'0');
@@ -297,6 +326,43 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
             default:return super.onOptionsItemSelected(item);
         }
 
+    }
+
+    /**
+     * 当返回到上个界面时，传回user按钮
+     */
+    @Override
+    public void onBackPressed() {
+        mIntent.putExtra("user",user);
+        setResult(1,mIntent);
+        finish();
+    }
+
+
+    /**
+     * 根据foodDetail返回更新listview
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == 1){
+            user = (User)data.getSerializableExtra("user");
+            String name = data.getStringExtra("name");
+            BaseAdapter adapter = null;
+            if(name.equals("hotFood")){
+                adapter = (BaseAdapter) hotFoodListView.getAdapter();
+            }else if(name.equals("coldFood")){
+                adapter = (BaseAdapter) coldFoodListView.getAdapter();
+            }else if(name.equals("seeFood")){
+                adapter = (BaseAdapter) seeFoodListView.getAdapter();
+            }else if(name.equals("drink")){
+                adapter = (BaseAdapter) drinkListView.getAdapter();
+            }
+            adapter.notifyDataSetChanged();
+        }
     }
 }
 
