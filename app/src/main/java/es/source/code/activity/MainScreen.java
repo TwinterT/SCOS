@@ -1,7 +1,9 @@
 package es.source.code.activity;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -36,6 +38,8 @@ public class MainScreen extends AppCompatActivity{
     private Intent mIntent;
     private User user;
 
+    private SharedPreferences mSharedPreferences;
+
     GridView mGridView;
 
     @Override
@@ -45,15 +49,15 @@ public class MainScreen extends AppCompatActivity{
 
         mIntent = getIntent();
 
-        //根据intent传递的字符串决定canBeVisible的值
-        String data = mIntent.getStringExtra("data");
-        if(data!=null && data.equals("FromEntry")){
+        //根据SharedPreferences的loginState决定canBeVisible的值
+        mSharedPreferences = getSharedPreferences("SCOSData", Context.MODE_MULTI_PROCESS);
+        if(mSharedPreferences.getInt("loginState",0) == 1){
             canBeVisible = true;
+            user = new User();
         }
 
         setMStringsAndMImages();
         initGridViewListner();
-
 
     }
 
@@ -131,6 +135,8 @@ public class MainScreen extends AppCompatActivity{
                     turnToFoodView();
                 }else if(position == WATCH_ORDER){
                     turnToWatchOrder();
+                }else if(position == HELP){
+                    turnToHelper();
                 }
             }
         });
@@ -156,6 +162,10 @@ public class MainScreen extends AppCompatActivity{
         startActivity(intent_toWatchOrder);
     }
 
+    private void turnToHelper(){
+        Intent intent_toHelper = new Intent(MainScreen.this,SCOSHelper.class);
+        startActivity(intent_toHelper);
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
@@ -166,16 +176,14 @@ public class MainScreen extends AppCompatActivity{
                    String message = bundle.getString("data");
                    if(message.equals("RegisterSuccess")){
                        Toast.makeText(MainScreen.this,"欢迎您成为SCOS新用户",Toast.LENGTH_SHORT).show();
-                       user = (User)bundle.getSerializable("user");
-                       if(user == null) canBeVisible = false;
-                       else canBeVisible = true;
-                   }else if(message.equals("LoginSuccess")){
-                       user = (User)bundle.getSerializable("user");
-                       if(user == null) canBeVisible = false;
-                       else canBeVisible = true;
-                   }else{
-                       if(user == null) canBeVisible = false;
-                       else canBeVisible = true;
+                   }
+                   int loginState = mSharedPreferences.getInt("loginState",0);
+                   if(loginState == 0){
+                       user = null;
+                       canBeVisible = false;
+                   }else if(loginState == 1){
+                       user = new User();
+                       canBeVisible = true;
                    }
                    setMStringsAndMImages();
                }

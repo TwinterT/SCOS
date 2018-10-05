@@ -40,7 +40,7 @@ public class User implements Serializable{
         positioinOrder = new StringBuilder();
     }
 
-    public void initTag(){
+    public void initCommitedTag(){
         tagHotFoodCommited = new StringBuilder(example.substring(0,FoodItems.hot_food_name.length));
         tagColdFoodCommited = new StringBuilder(example.substring(0,FoodItems.cold_food_name.length));
         tagSeeFoodCommited = new StringBuilder(example.substring(0,FoodItems.see_food_name.length));
@@ -95,33 +95,40 @@ public class User implements Serializable{
         this.positioinOrder = new StringBuilder(positioinOrder.toString());
     }
 
-    public void setTagHotFood(int pos , char data){
+    public void setTagPositionHotFood(int pos , char data){
         tagHotFood.setCharAt(pos,data);
     }
 
-    public void setTagColdFood(int pos , char data){
+    public void setTagPositionColdFood(int pos , char data){
         tagColdFood.setCharAt(pos,data);
     }
 
-    public void setTagSeeFood(int pos , char data){
+    public void setTagPositionSeeFood(int pos , char data){
         tagSeeFood.setCharAt(pos,data);
     }
 
-    public void setTagDrink(int pos , char data){
+    public void setTagPositionDrink(int pos , char data){
         tagDrink.setCharAt(pos,data);
+    }
+
+    public void initTag(){
+        tagHotFood = new StringBuilder(example.substring(0,FoodItems.hot_food_name.length));
+        tagColdFood = new StringBuilder(example.substring(0,FoodItems.cold_food_name.length));
+        tagSeeFood = new StringBuilder(example.substring(0,FoodItems.see_food_name.length));
+        tagDrink = new StringBuilder(example.substring(0,FoodItems.drink_name.length));
     }
 
     public int getTagPositionHotFood(int pos){
         return Integer.parseInt(""+tagHotFood.charAt(pos));
     }
     public int getTagPositionColdFood(int pos){
-        return Integer.parseInt(""+tagHotFood.charAt(pos));
+        return Integer.parseInt(""+tagColdFood.charAt(pos));
     }
     public int getTagPositionSeeFood(int pos){
-        return Integer.parseInt(""+tagHotFood.charAt(pos));
+        return Integer.parseInt(""+tagSeeFood.charAt(pos));
     }
     public int getTagPositionDrink(int pos){
-        return Integer.parseInt(""+tagHotFood.charAt(pos));
+        return Integer.parseInt(""+tagDrink.charAt(pos));
     }
 
     public StringBuilder getTagHotFood() {

@@ -209,26 +209,26 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
                         if(button.getText().toString().equals(ORDER)){
                             Toast.makeText(FoodView.this,"点菜成功 " + getItemId(position),Toast.LENGTH_SHORT).show();
                             if(parent == hotFoodListView){
-                                user.setTagHotFood(position,'1');
+                                user.setTagPositionHotFood(position,'1');
                             }else if(parent == coldFoodListView){
-                                user.setTagColdFood(position,'1');
+                                user.setTagPositionColdFood(position,'1');
                             }else if(parent == seeFoodListView){
-                                user.setTagSeeFood(position,'1');
+                                user.setTagPositionSeeFood(position,'1');
                             }else if(parent == drinkListView){
-                                user.setTagDrink(position,'1');
+                                user.setTagPositionDrink(position,'1');
                             }
                             button.setText(UNSUBSCRIBE);
                             button.setTextColor(Color.RED);
                         }else if(button.getText().toString().equals(UNSUBSCRIBE)){
                             Toast.makeText(FoodView.this,"退点成功 " + getItemId(position),Toast.LENGTH_SHORT).show();
                             if(parent == hotFoodListView){
-                                user.setTagHotFood(position,'0');
+                                user.setTagPositionHotFood(position,'0');
                             }else if(parent == coldFoodListView){
-                                user.setTagColdFood(position,'0');
+                                user.setTagPositionColdFood(position,'0');
                             }else if(parent == seeFoodListView){
-                                user.setTagSeeFood(position,'0');
+                                user.setTagPositionSeeFood(position,'0');
                             }else if(parent == drinkListView){
-                                user.setTagDrink(position,'0');
+                                user.setTagPositionDrink(position,'0');
                             }
                             button.setText(ORDER);
                             button.setTextColor(Color.BLACK);
@@ -314,13 +314,13 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
                 Intent intent = new Intent(FoodView.this,FoodOrderView.class);
                 intent.putExtra("user",user);
                 intent.putExtra("pos",1);
-                startActivity(intent);
+                startActivityForResult(intent,0);
             }return true;
             case R.id.food_view_watch_ordered:{
                 Intent intent = new Intent(FoodView.this,FoodOrderView.class);
                 intent.putExtra("user",user);
                 intent.putExtra("pos",0);
-                startActivity(intent);
+                startActivityForResult(intent,0);
             }return true;
             case R.id.food_view_call_for_service:Toast.makeText(FoodView.this,"呼叫服务",Toast.LENGTH_SHORT).show();return true;
             default:return super.onOptionsItemSelected(item);
@@ -362,6 +362,12 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
                 adapter = (BaseAdapter) drinkListView.getAdapter();
             }
             adapter.notifyDataSetChanged();
+        }else if(requestCode == 0){
+            user = (User)data.getSerializableExtra("user");
+            initListView(hotFoodListView, FoodItems.hot_food_name,FoodItems.hot_food_price,FoodItems.hot_food_image);
+            initListView(coldFoodListView, FoodItems.cold_food_name,FoodItems.cold_food_price,FoodItems.cold_food_image);
+            initListView(seeFoodListView, FoodItems.see_food_name,FoodItems.see_food_price,FoodItems.see_food_image);
+            initListView(drinkListView, FoodItems.drink_name,FoodItems.drink_price,FoodItems.drink_image);
         }
     }
 }

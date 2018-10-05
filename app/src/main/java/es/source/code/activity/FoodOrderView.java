@@ -1,7 +1,12 @@
 package es.source.code.activity;
 
+import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.AsyncTask;
+import android.os.Handler;
+import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.view.PagerAdapter;
@@ -55,6 +60,21 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
     private User user;
     private Intent mIntent;
 
+    private ProgressDialog mProgressDialog;
+
+    @SuppressLint("HandlerLeak")
+    private Handler mHandler = new Handler(){
+        @Override
+        public void handleMessage(Message msg) {
+            super.handleMessage(msg);
+            if(msg.what == 1){
+                initOrderList();
+                numberTextView.setText(""+user.getPositioinOrder().length());
+                priceTextView.setText(""+user.getTotalPrice());
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -79,9 +99,7 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
             @Override
             public void onClick(View v) {
                 if(mButton.getText().toString().equals("结账")){
-                    if(user.isOldUser()){
-                        Toast.makeText(FoodOrderView.this,"您好，老顾客，本次你可以享受7折优惠",Toast.LENGTH_SHORT).show();
-                    }
+                        settleAccount();
                 }else if(mButton.getText().toString().equals("提交订单")){
                     if(notOrderListView.getCount()!=0){
                         //此处把已经点的菜提交至User,并且初始化数据
@@ -90,17 +108,20 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
                         user.setNumberColdFoodNotOrder(numberColdFoodNotOrder);
                         user.setNumberSeeFoodNotOrder(numberSeeFoodNotOrder);
                         user.setNumberDrinkNotOrder(numberDrinkNotOrder);
-                        user.initTag();
+                        user.setTotalPrice(notOrderTotalPrice);
+                        user.initCommitedTag();
 
                         Toast.makeText(FoodOrderView.this,"提交订单成功",Toast.LENGTH_SHORT).show();
                         //把本地数据清空
                         positionNotOrder = new StringBuilder();
-                        user.setTotalPrice(notOrderTotalPrice);
                         numberHotFoodNotOrder = 0;
                         numberColdFoodNotOrder = 0;
                         numberSeeFoodNotOrder = 0;
                         numberDrinkNotOrder = 0;
                         notOrderTotalPrice = 0;
+
+                        //把User中已经点的菜清空
+                        user.initTag();
 
                         initTotalPrice();
                         initNotOrderList();
@@ -113,6 +134,18 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
             }
         });
 
+    }
+
+    /**
+     * 结账处理
+     */
+    private void  settleAccount(){
+        if(orderListView.getCount() == 0){
+            Toast.makeText(FoodOrderView.this,"无菜品需要结账",Toast.LENGTH_SHORT).show();
+        }else{
+            MyAsyncTask myAsyncTask = new MyAsyncTask("支付中");
+            myAsyncTask.execute("支付中");
+        }
     }
 
     /**
@@ -360,6 +393,11 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
 
     }
 
+    private void closeDialog(){
+        if(mProgressDialog != null && mProgressDialog.isShowing()){
+            mProgressDialog.dismiss();
+        }
+    }
 
     /**
      * 自定义的ViewPager适配器
@@ -405,7 +443,75 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
         mTabLayout.setOnTabSelectedListener(this);
     }
 
-}
+    @Override
+    public void onBackPressed() {
+        mIntent.putExtra("user",user);
+        setResult(2,mIntent);
+        finish();
+        super.onBackPressed();
+    }
 
+    class MyAsyncTask extends AsyncTask<String,Integer,String>{
+
+        private String title;
+        public MyAsyncTask(String title){
+            super();
+            this.title = title;
+        }
+        @Override
+        protected void onPreExecute() {
+            Toast.makeText(FoodOrderView.this,"正在支付中，请稍等...",Toast.LENGTH_SHORT).show();
+            if(mProgressDialog == null|| !mProgressDialog.isShowing()){
+                mProgressDialog = new ProgressDialog(FoodOrderView.this);
+                mProgressDialog.setTitle("请稍等");
+                mProgressDialog.setMessage(title+"...");
+                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+                mProgressDialog.show();
+            }
+        }
+        @Override
+        protected void onPostExecute(String s) {
+            Toast.makeText(FoodOrderView.this,"支付完成",Toast.LENGTH_SHORT).show();
+            String temp = "本次支付"+priceTextView.getText().toString()+"元，获得积分"+priceTextView.getText().toString()+"分";
+            Toast.makeText(FoodOrderView.this,temp,Toast.LENGTH_SHORT).show();
+            mHandler.sendEmptyMessage(1);
+            closeDialog();
+        }
+        @Override
+        protected void onProgressUpdate(Integer... values) {
+            mProgressDialog.setProgress(values[0]);
+            mProgressDialog.setSecondaryProgress(0);
+        }
+        @Override
+        protected void onCancelled(String s) {
+            System.out.println("======================================");
+            Toast.makeText(FoodOrderView.this,"支付中断",Toast.LENGTH_SHORT).show();
+            closeDialog();
+        }
+        @Override
+        protected String doInBackground(String... strings) {
+            int ratio = 0;
+            for(;ratio<=100;ratio+=5){
+                if(!mProgressDialog.isShowing()){
+                    cancel(true);
+                    return strings[0];
+                }
+                try {
+                    Thread.sleep(300);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                publishProgress(ratio);
+            }
+            user.setPositioinOrder(new StringBuilder(""));
+            user.setNumberHotFoodNotOrder(0);
+            user.setNumberColdFoodNotOrder(0);
+            user.setNumberSeeFoodNotOrder(0);
+            user.setNumberDrinkNotOrder(0);
+            user.setTotalPrice(0);
+            return strings[0];
+        }
+    }
+}
 
 

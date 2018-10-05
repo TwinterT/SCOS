@@ -3,7 +3,6 @@ package es.source.code.activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
-import android.support.constraint.ConstraintLayout;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -99,25 +98,25 @@ public class FoodDetailed extends AppCompatActivity {
                         button.setText("点菜");
                         button.setTextColor(Color.BLACK);
                         if(message.equals("hotFood")){
-                            user.setTagHotFood(finalI,'0');
+                            user.setTagPositionHotFood(finalI,'0');
                         }else if(message.equals("coldFood")){
-                            user.setTagColdFood(finalI,'0');
+                            user.setTagPositionColdFood(finalI,'0');
                         }else if(message.equals("seeFood")){
-                            user.setTagSeeFood(finalI,'0');
+                            user.setTagPositionSeeFood(finalI,'0');
                         }else if(message.equals("drink")){
-                            user.setTagDrink(finalI,'0');
+                            user.setTagPositionDrink(finalI,'0');
                         }
                     }else if(button.getText().toString().equals("点菜")){
                         button.setText("退点");
                         button.setTextColor(Color.RED);
                         if(message.equals("hotFood")){
-                            user.setTagHotFood(finalI,'1');
+                            user.setTagPositionHotFood(finalI,'1');
                         }else if(message.equals("coldFood")){
-                            user.setTagColdFood(finalI,'1');
+                            user.setTagPositionColdFood(finalI,'1');
                         }else if(message.equals("seeFood")){
-                            user.setTagSeeFood(finalI,'1');
+                            user.setTagPositionSeeFood(finalI,'1');
                         }else if(message.equals("drink")){
-                            user.setTagDrink(finalI,'1');
+                            user.setTagPositionDrink(finalI,'1');
                         }
                     }
                 }
@@ -164,5 +163,6 @@ public class FoodDetailed extends AppCompatActivity {
         mIntent.putExtra("name",name);
         setResult(2,mIntent);
         finish();
+        super.onBackPressed();
     }
 }

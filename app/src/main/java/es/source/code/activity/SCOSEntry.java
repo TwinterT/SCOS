@@ -1,6 +1,8 @@
 package es.source.code.activity;
 
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.GestureDetector;
@@ -12,6 +14,7 @@ public class SCOSEntry extends AppCompatActivity implements View.OnTouchListener
 
     private RelativeLayout mRelativeLayout;
     private GestureDetector mGestureDetector;
+    private SharedPreferences mSharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,7 +62,6 @@ public class SCOSEntry extends AppCompatActivity implements View.OnTouchListener
             if(Math.abs(offsetX) > Math.abs(offsetY)) { //在X上的偏移大于Y上的偏移时，为左右滑动
                 if(offsetX > 0 ){ //此时为向左滑动
                     Intent intent = new Intent(MainScreen.MAINSCREEN_ACTION);
-                    intent.putExtra("data", "From_Entry");
                     startActivity(intent);
                 }
             }

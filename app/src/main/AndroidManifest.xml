@@ -3,6 +3,11 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="es.source.code.activity">
 
+    <uses-permission android:name="android.permission.CALL_PHONE" />
+    <uses-permission android:name="android.permission.SEND_SMS" />
+    <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <permission
         android:name="scos.permission.ACCESSSCOS"
         android:protectionLevel="dangerous" />
@@ -45,7 +50,9 @@
             android:name=".FoodView"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".FoodOrderView" />
-        <activity android:name=".FoodDetailed"></activity>
+        <activity android:name=".FoodDetailed" />
+        <activity android:name=".SCOSHelper">
+        </activity>
     </application>
 
 </manifest>
