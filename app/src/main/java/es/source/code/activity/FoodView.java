@@ -33,9 +33,13 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import es.source.code.model.EventBusMessage;
 import es.source.code.model.FoodItems;
 import es.source.code.model.User;
 import es.source.code.service.ServerObserverService;
@@ -434,6 +438,8 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
                 if(item.getTitle().equals("启动实时更新")) {
                     item.setTitle("停止实时更新");
 
+                    System.out.println("send----------------");
+                    System.out.println("send stop----------------");
                     //新建消息
                     Message message = new Message();
                     message.what = 1;
@@ -515,7 +521,6 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
         finish();
     }
 
-
     /**
      * 根据foodDetail返回更新listview
      * @param requestCode
@@ -547,6 +552,7 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
             initListView(drinkListView,drinkAdapter);
         }
     }
+
 }
 
 

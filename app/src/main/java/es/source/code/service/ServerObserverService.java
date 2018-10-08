@@ -10,8 +10,14 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.EventBusBuilder;
+import org.greenrobot.eventbus.Subscribe;
+
 import java.util.Random;
 
+import es.source.code.activity.FoodView;
+import es.source.code.model.EventBusMessage;
 import es.source.code.model.FoodItems;
 
 public class ServerObserverService extends Service {
@@ -59,9 +65,12 @@ public class ServerObserverService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        System.out.println("create0-------------------------");
         ServiceRunningTag = true;
         threadRun();
     }
+
+
 
     @Override
     public void onDestroy() {

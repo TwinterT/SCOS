@@ -30,6 +30,10 @@ import android.widget.GridView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
+
 import java.util.Properties;
 
 import javax.activation.DataHandler;
@@ -40,6 +44,8 @@ import javax.mail.Transport;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import javax.mail.util.ByteArrayDataSource;
+
+import es.source.code.model.EventBusMessage;
 
 
 public class SCOSHelper extends AppCompatActivity {
@@ -52,23 +58,23 @@ public class SCOSHelper extends AppCompatActivity {
     private GridView mGridView;
 
 
-    //处理接收邮件发送是否成功的信息
-    @SuppressLint("HandlerLeak")
-    private Handler mHandler = new Handler(){
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            if(msg.what == 1){
-                Toast.makeText(SCOSHelper.this,"邮件发送成功",Toast.LENGTH_SHORT).show();
-            }else if(msg.what == -1){
-                Toast.makeText(SCOSHelper.this,"正在发送邮件...",Toast.LENGTH_SHORT).show();
-                Toast.makeText(SCOSHelper.this,"邮件发送中，请耐心等待",Toast.LENGTH_LONG).show();
-            }else{
-                Toast.makeText(SCOSHelper.this,"邮件发送失败",Toast.LENGTH_SHORT).show();
-
-            }
-        }
-    };
+//    //处理接收邮件发送是否成功的信息
+//    @SuppressLint("HandlerLeak")
+//    private Handler mHandler = new Handler(){
+//        @Override
+//        public void handleMessage(Message msg) {
+//            super.handleMessage(msg);
+//            if(msg.what == 1){
+//                Toast.makeText(SCOSHelper.this,"邮件发送成功",Toast.LENGTH_SHORT).show();
+//            }else if(msg.what == -1){
+//                Toast.makeText(SCOSHelper.this,"正在发送邮件...",Toast.LENGTH_SHORT).show();
+//                Toast.makeText(SCOSHelper.this,"邮件发送中，请耐心等待",Toast.LENGTH_LONG).show();
+//            }else{
+//                Toast.makeText(SCOSHelper.this,"邮件发送失败",Toast.LENGTH_SHORT).show();
+//
+//            }
+//        }
+//    };
 
 
     @Override
@@ -79,8 +85,35 @@ public class SCOSHelper extends AppCompatActivity {
         mGridView = findViewById(R.id.scos_helper_grid);
 
         initGridView();
+
+        //订阅EventBus
+        EventBus.getDefault().register(this);
     }
 
+    /**
+     * 处理收到的eventBusMessage
+     * @param eventBusMessage
+     */
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onEvent(EventBusMessage eventBusMessage){
+        if(eventBusMessage.getMessage().equals("1")){
+            Toast.makeText(SCOSHelper.this,"邮件发送成功",Toast.LENGTH_SHORT).show();
+        }else if(eventBusMessage.getMessage().equals("-1")){
+            Toast.makeText(SCOSHelper.this,"正在发送邮件...",Toast.LENGTH_SHORT).show();
+            Toast.makeText(SCOSHelper.this,"邮件发送中，请耐心等待",Toast.LENGTH_LONG).show();
+        }else{
+            Toast.makeText(SCOSHelper.this,"邮件发送失败",Toast.LENGTH_SHORT).show();
+        }
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        //取消订阅EventBus
+        EventBus.getDefault().unregister(this);
+    }
 
     /**
      * 初始化GridView，包括适配器和监听器
@@ -225,14 +258,16 @@ public class SCOSHelper extends AppCompatActivity {
         new Thread(new Runnable() {
             @Override
             public void run() {
-
-                mHandler.sendEmptyMessage(-1);
+                EventBus.getDefault().post(new EventBusMessage("-1"));
+//                mHandler.sendEmptyMessage(-1);
                 try {
                     sendEmail();
-                    mHandler.sendEmptyMessage(1);
+                    EventBus.getDefault().post(new EventBusMessage("1"));
+//                    mHandler.sendEmptyMessage(1);
                 } catch (Exception e) {
                     e.printStackTrace();
-                    mHandler.sendEmptyMessage(0);
+                    EventBus.getDefault().post(new EventBusMessage("0"));
+//                    mHandler.sendEmptyMessage(0);
                 }
 
             }
