@@ -28,6 +28,23 @@
         android:layout_toRightOf="@id/order_item_image">
 
         <TextView
+            android:id="@+id/order_item_storage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentStart="true"
+            android:layout_centerVertical="true"
+            android:layout_marginBottom="20dp"
+            android:layout_marginEnd="20dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:text="余量: 20 份"
+            android:textColor="#87CEFA"
+            android:textStyle="bold" />
+
+        <TextView
             android:id="@+id/order_item_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"

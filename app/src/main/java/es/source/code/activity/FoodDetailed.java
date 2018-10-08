@@ -91,43 +91,49 @@ public class FoodDetailed extends AppCompatActivity {
             textView_name.setText(names[i]);
             textView_price.setText(""+prices[i]+" 元");
             final int finalI = i;
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(button.getText().toString().equals("退点")){
-                        button.setText("点菜");
-                        button.setTextColor(Color.BLACK);
-                        if(message.equals("hotFood")){
-                            user.setTagPositionHotFood(finalI,'0');
-                        }else if(message.equals("coldFood")){
-                            user.setTagPositionColdFood(finalI,'0');
-                        }else if(message.equals("seeFood")){
-                            user.setTagPositionSeeFood(finalI,'0');
-                        }else if(message.equals("drink")){
-                            user.setTagPositionDrink(finalI,'0');
-                        }
-                    }else if(button.getText().toString().equals("点菜")){
-                        button.setText("退点");
-                        button.setTextColor(Color.RED);
-                        if(message.equals("hotFood")){
-                            user.setTagPositionHotFood(finalI,'1');
-                        }else if(message.equals("coldFood")){
-                            user.setTagPositionColdFood(finalI,'1');
-                        }else if(message.equals("seeFood")){
-                            user.setTagPositionSeeFood(finalI,'1');
-                        }else if(message.equals("drink")){
-                            user.setTagPositionDrink(finalI,'1');
+            if(user != null){
+                button.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if(button.getText().toString().equals("退点")){
+                            button.setText("点菜");
+                            button.setTextColor(Color.BLACK);
+                            if(message.equals("hotFood")){
+                                user.setTagPositionHotFood(finalI,'0');
+                            }else if(message.equals("coldFood")){
+                                user.setTagPositionColdFood(finalI,'0');
+                            }else if(message.equals("seeFood")){
+                                user.setTagPositionSeeFood(finalI,'0');
+                            }else if(message.equals("drink")){
+                                user.setTagPositionDrink(finalI,'0');
+                            }
+                        }else if(button.getText().toString().equals("点菜")){
+                            button.setText("退点");
+                            button.setTextColor(Color.RED);
+                            if(message.equals("hotFood")){
+                                user.setTagPositionHotFood(finalI,'1');
+                            }else if(message.equals("coldFood")){
+                                user.setTagPositionColdFood(finalI,'1');
+                            }else if(message.equals("seeFood")){
+                                user.setTagPositionSeeFood(finalI,'1');
+                            }else if(message.equals("drink")){
+                                user.setTagPositionDrink(finalI,'1');
+                            }
                         }
                     }
+                });
+                if(tag.charAt(i) == '1'){
+                    button.setText("退点");
+                    button.setTextColor(Color.RED);
+                }else if(tag.charAt(i) == '0'){
+                    button.setText("点菜");
+                    button.setTextColor(Color.BLACK);
                 }
-            });
-            if(tag.charAt(i) == '1'){
-                button.setText("退点");
-                button.setTextColor(Color.RED);
-            }else if(tag.charAt(i) == '0'){
-                button.setText("点菜");
-                button.setTextColor(Color.BLACK);
+            }else{
+                button.setEnabled(false);
+                button.setVisibility(View.INVISIBLE);
             }
+
             mViewList.add(mView);
         }
     }

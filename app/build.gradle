@@ -4,7 +4,7 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "es.source.code.activity"
-        minSdkVersion 15
+        minSdkVersion 16
         targetSdkVersion 28
         versionCode 3
         versionName "2"
@@ -37,4 +37,5 @@ dependencies {
     implementation files('libs/activation.jar')
     implementation files('libs/additionnal.jar')
     implementation files('libs/mail.jar')
+    implementation 'org.greenrobot:eventbus:3.1.1'
 }

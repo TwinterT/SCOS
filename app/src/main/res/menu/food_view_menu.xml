@@ -13,6 +13,11 @@
         app:showAsAction="never"/>
 
     <item
+        android:id="@+id/food_view_startService"
+        android:title="启动实时更新"
+        app:showAsAction="never"/>
+
+    <item
         android:id="@+id/food_view_call_for_service"
         android:title="呼叫服务"
         app:showAsAction="never" />

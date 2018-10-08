@@ -7,6 +7,8 @@
     <uses-permission android:name="android.permission.SEND_SMS" />
     <uses-permission android:name="android.permission.READ_PHONE_STATE" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
 
     <permission
         android:name="scos.permission.ACCESSSCOS"
@@ -51,8 +53,32 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
         <activity android:name=".FoodOrderView" />
         <activity android:name=".FoodDetailed" />
-        <activity android:name=".SCOSHelper">
-        </activity>
+        <activity android:name=".SCOSHelper" />
+
+        <service
+            android:name="es.source.code.service.ServerObserverService"
+            android:enabled="true"
+            android:exported="true"
+            android:process="es.source.code.observerservice" />
+        <service
+            android:name="es.source.code.service.UpdateService"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="es.source.code.service.openUpdateService"/>
+            </intent-filter>
+        </service>
+
+        <receiver
+            android:name="es.source.code.br.DeviceStartedListener"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+
+        </receiver>
     </application>
 
 </manifest>
