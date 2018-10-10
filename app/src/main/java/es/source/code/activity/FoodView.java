@@ -84,24 +84,29 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
             if(msg.what == 10){
                 //处理从服务端收到的message
                 Bundle bundle = msg.getData();
-                int number = bundle.getInt("number",0);
+                int type = bundle.getInt("type",0);
                 int pos = bundle.getInt("pos");
                 int storage = bundle.getInt("storage");
-                switch (number){
+                int price = bundle.getInt("price");
+                switch (type){
                     case FoodItems.HOT_FOOD:
                         FoodItems.hot_food_storage[pos] = storage;
+                        FoodItems.hot_food_price[pos] = price;
                         hotFoodAdapter.notifyDataSetChanged();
                         break;
                     case FoodItems.COLD_FOOD:
                         FoodItems.cold_food_storage[pos] = storage;
+                        FoodItems.cold_food_price[pos] = price;
                         coldFoodAdapter.notifyDataSetChanged();
                         break;
                     case FoodItems.SEE_FOOD:
                         FoodItems.see_food_storage[pos] = storage;
+                        FoodItems.see_food_price[pos] = price;
                         seeFoodAdapter.notifyDataSetChanged();
                         break;
                     case FoodItems.DRINK:
                         FoodItems.drink_storage[pos] = storage;
+                        FoodItems.drink_price[pos] = price;
                         drinkAdapter.notifyDataSetChanged();
                         break;
                     default:
@@ -167,10 +172,10 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
     }
 
     private void initListAdapter(){
-        hotFoodAdapter = new MyBaseAdapter(FoodItems.hot_food_name,FoodItems.hot_food_image,FoodItems.hot_food_price);
-        coldFoodAdapter = new MyBaseAdapter(FoodItems.cold_food_name,FoodItems.cold_food_image,FoodItems.cold_food_price);
-        seeFoodAdapter = new MyBaseAdapter(FoodItems.see_food_name,FoodItems.see_food_image,FoodItems.see_food_price);
-        drinkAdapter = new MyBaseAdapter(FoodItems.drink_name,FoodItems.drink_image,FoodItems.drink_price);
+        hotFoodAdapter = new MyBaseAdapter(FoodItems.hot_food_name,FoodItems.hot_food_image,FoodItems.hot_food_price,FoodItems.hot_food_storage);
+        coldFoodAdapter = new MyBaseAdapter(FoodItems.cold_food_name,FoodItems.cold_food_image,FoodItems.cold_food_price,FoodItems.cold_food_storage);
+        seeFoodAdapter = new MyBaseAdapter(FoodItems.see_food_name,FoodItems.see_food_image,FoodItems.see_food_price,FoodItems.see_food_storage);
+        drinkAdapter = new MyBaseAdapter(FoodItems.drink_name,FoodItems.drink_image,FoodItems.drink_price,FoodItems.drink_storage);
     }
 
     /**
@@ -219,11 +224,13 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
         private String[] names;
         private int[] images;
         private int[] prices;
+        private int[] storage;
 
-        public MyBaseAdapter(String[] names,int[] images,int[] prices){
+        public MyBaseAdapter(String[] names,int[] images,int[] prices,int[] storage){
             this.names = names;
             this.images = images;
             this.prices = prices;
+            this.storage = storage;
         }
         @Override
         public int getCount() {
@@ -259,23 +266,19 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
             TextView textView_storage = convertView.findViewById(R.id.order_item_storage);
 
             final Button button = convertView.findViewById(R.id.order_item_button);
-            int storage = 0;
+            int store = storage[position];
             int k = 0;
             if(parent == hotFoodListView){
-                storage = Integer.parseInt(FoodItems.getStorage(FoodItems.HOT_FOOD)[position]+"");
                 k = user.getTagPositionHotFood(position);
             }else if(parent == coldFoodListView){
-                storage = Integer.parseInt(FoodItems.getStorage(FoodItems.COLD_FOOD)[position]+"");
                 k = user.getTagPositionColdFood(position);
             }else if(parent == seeFoodListView){
-                storage = Integer.parseInt(FoodItems.getStorage(FoodItems.SEE_FOOD)[position]+"");
                 k = user.getTagPositionSeeFood(position);
             }else if(parent == drinkListView){
-                storage = Integer.parseInt(FoodItems.getStorage(FoodItems.DRINK)[position]+"");
                 k = user.getTagPositionDrink(position);
             }
 
-            textView_storage.setText("库存 " + storage + " 份");
+            textView_storage.setText("库存 " + store + " 份");
 
             if(k == 0){
                 button.setText(ORDER);

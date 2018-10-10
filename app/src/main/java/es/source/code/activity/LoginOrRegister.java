@@ -7,7 +7,9 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.Looper;
 import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -19,12 +21,25 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import es.source.code.model.User;
 
 public class LoginOrRegister extends AppCompatActivity implements View.OnClickListener{
+
+    private String URLSTRING = "http://192.168.1.104:8080/SCOSServer/LoginValidator";
 
     private EditText user_name;
     private EditText password;
@@ -43,49 +58,13 @@ public class LoginOrRegister extends AppCompatActivity implements View.OnClickLi
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login_or_register);
 
-        //初始化各个控件
-        mIntent = getIntent();
-        user_name = findViewById(R.id.login_or_register_editText_username);
-        password = findViewById(R.id.login_or_register_editText_password);
-        login = findViewById(R.id.login_or_register_Button_login);
-        back = findViewById(R.id.login_or_register_Button_return);
-        register = findViewById(R.id._or_register_textView_register);
-        mSharedPreferences = getSharedPreferences("SCOSData", Context.MODE_MULTI_PROCESS);
-        mEditor = mSharedPreferences.edit();
-        mProgressDialog = new ProgressDialog(this);
-
-
-        Toast.makeText(LoginOrRegister.this, "如需注册请先输入用户名密码在点击下方注册按钮",Toast.LENGTH_LONG).show();
-
+        initComponent();
 
         //判断是否已经登录过，若为未登录过则隐藏登录按钮
         String userName = mSharedPreferences.getString("userName","");
-        if(userName.equals("")){
-            login.setVisibility(View.INVISIBLE);
-            login.setEnabled(false);
-        }else {
-            register.setVisibility(View.INVISIBLE);
-            register.setEnabled(false);
+        if(!userName.equals("")){
             user_name.setText(userName);
-
-
-            //判断是否处在登录状态
-            int loginState = mSharedPreferences.getInt("loginState",0);
-            if(loginState == 1){
-                login.setEnabled(false);
-                user_name.setEnabled(false);
-                password.setEnabled(false);
-            }else{
-                login.setEnabled(true);
-                user_name.setEnabled(true);
-                login.setEnabled(true);
-            }
         }
-
-        //登录和返回设置监听
-        login.setOnClickListener(this);
-        back.setOnClickListener(this);
-        register.setOnClickListener(this);
 
         user_name.addTextChangedListener(new TextWatcher() { //为username添加一个监听器
             @Override
@@ -103,6 +82,36 @@ public class LoginOrRegister extends AppCompatActivity implements View.OnClickLi
             public void afterTextChanged(Editable s) {
             }
         });
+    }
+
+    /**
+     * 初始化各个控件
+     */
+    private void initComponent(){
+        //初始化各个控件
+        mIntent = getIntent();
+        user_name = findViewById(R.id.login_or_register_editText_username);
+        password = findViewById(R.id.login_or_register_editText_password);
+        login = findViewById(R.id.login_or_register_Button_login);
+        back = findViewById(R.id.login_or_register_Button_return);
+        register = findViewById(R.id._or_register_textView_register);
+        mSharedPreferences = getSharedPreferences("SCOSData", Context.MODE_MULTI_PROCESS);
+        mEditor = mSharedPreferences.edit();
+
+        //登录和返回设置监听
+        login.setOnClickListener(this);
+        back.setOnClickListener(this);
+        register.setOnClickListener(this);
+
+        mProgressDialog = new ProgressDialog(this);
+        //圆形转动的进度条
+        mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        //设置是否可以通过点击Back键取消
+        mProgressDialog.setCancelable(false);
+        //设置是否可以点击Dialog外取消进度条
+        mProgressDialog.setCanceledOnTouchOutside(false);
+        //设置title的图标
+        mProgressDialog.setIcon(R.drawable.launch);
     }
 
 
@@ -123,44 +132,81 @@ public class LoginOrRegister extends AppCompatActivity implements View.OnClickLi
      * 处理点击事件
      * @param v
      */
+    @SuppressLint("StaticFieldLeak")
     @Override
     public void onClick(View v) {
         if(v.getId() == login.getId()){ //当登录按钮被按下
             if(judgeRegex(user_name.getText().toString())&& !password.getText().toString().equals("")) {
 
-                //圆形转动的进度条
-                mProgressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
-
-                //设置是否可以通过点击Back键取消
-                mProgressDialog.setCancelable(false);
-
-                //设置是否可以点击Dialog外取消进度条
-                mProgressDialog.setCanceledOnTouchOutside(false);
-
-                //设置title的图标
-                mProgressDialog.setIcon(R.drawable.launch);
-
-                //设置标题
-                mProgressDialog.setTitle("登录中");
-
-                //dismiss监听
-                mProgressDialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
+                //定义登录异步任务
+                new AsyncTask<String,Void,Boolean>(){
+                    /**
+                     * 处理登陆前事件
+                     */
                     @Override
-                    public void onDismiss(DialogInterface dialog) {
-                        Toast.makeText(LoginOrRegister.this, "登录成功", Toast.LENGTH_SHORT).show();
+                    protected void onPreExecute() {
+                        super.onPreExecute();
+                        //设置标题
+                        mProgressDialog.setTitle("登录中");
+                        mProgressDialog.setMessage("登录中，请等待");
+                        mProgressDialog.show();
                     }
-                });
 
-                //监听cancel实践
-                mProgressDialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
+                    /**
+                     * 处理登录事件
+                     * @param strings 第一个参数为用户名，第二个参数为密码，
+                     * @return
+                     */
                     @Override
-                    public void onCancel(DialogInterface dialog) {
-                        Toast.makeText(LoginOrRegister.this, "取消登录", Toast.LENGTH_SHORT).show();
+                    protected Boolean doInBackground(String... strings) {
+
+                        int code;
+                        try {
+                            code = httpPost(false,strings);
+                            Thread.sleep(2000);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            code = 0;
+                        }
+                        return code==1;
                     }
-                });
-                mProgressDialog.setMessage("登录中，请等待");
-                mProgressDialog.show();
-                mHandler.postDelayed(mDialog_key, 2000);
+
+                    /**
+                     * 处理登录后事件
+                     * @param aBoolean
+                     */
+                    @Override
+                    protected void onPostExecute(Boolean aBoolean) {
+                        super.onPostExecute(aBoolean);
+                        mProgressDialog.dismiss();
+
+                        if(aBoolean){
+                            Toast.makeText(LoginOrRegister.this,"登录成功",Toast.LENGTH_SHORT).show();
+
+                            //登录成功写入数据到SharedPreferences
+                            mEditor.putString("userName",user_name.getText().toString());
+                            mEditor.putInt("loginState",1);
+                            mEditor.commit();
+
+                            //登录成功 返回LoginSuccess字符串和User
+                            User loginUser = new User();
+                            loginUser.setUserName(user_name.getText().toString());
+                            loginUser.setPassword(password.getText().toString());
+                            loginUser.setOldUser(true);
+                            Bundle bundle = new Bundle();
+                            bundle.putSerializable("user",loginUser);
+                            bundle.putString("data","LoginSuccess");
+                            mIntent.putExtras(bundle);
+                            setResult(Activity.RESULT_OK, mIntent);
+                            finish();
+                        }else{
+                            Toast.makeText(LoginOrRegister.this,"登录失败，请检查网络连接",Toast.LENGTH_SHORT).show();
+                        }
+
+
+                    }
+                }.execute(user_name.getText().toString(),password.getText().toString());
+
             }else{
                 Toast.makeText(LoginOrRegister.this,"请输入正确的用户名密码",Toast.LENGTH_SHORT).show();
             }
@@ -181,56 +227,124 @@ public class LoginOrRegister extends AppCompatActivity implements View.OnClickLi
             //当注册按钮被按下时
             if(judgeRegex(user_name.getText().toString())&& !password.getText().toString().equals("")) {
 
-                //注册成功写入数据到SharedPreferences
-                mEditor.putString("userName",user_name.getText().toString());
-                mEditor.putInt("loginState",1);
-                mEditor.commit();
+                new AsyncTask<String,Void,Boolean>(){
 
-                //初始化user
-                User loginUser = new User();
-                loginUser.setUserName(user_name.getText().toString());
-                loginUser.setPassword(password.getText().toString());
-                loginUser.setOldUser(false);
-                Bundle bundle = new Bundle();
-                bundle.putSerializable("user", loginUser);
-                bundle.putString("data", "RegisterSuccess");
-                mIntent.putExtras(bundle);
-                setResult(Activity.RESULT_OK, mIntent);
-                Toast.makeText(LoginOrRegister.this, "注册成功", Toast.LENGTH_SHORT).show();
-                finish();
+                    /**
+                     * 处理注册前事件
+                     */
+                    @Override
+                    protected void onPreExecute() {
+                        super.onPreExecute();
+                        //设置标题
+                        mProgressDialog.setTitle("注册中");
+                        mProgressDialog.setMessage("注册中，请等待");
+                        mProgressDialog.show();
+                    }
+
+                    /**
+                     * 处理注册事件
+                     * @param strings 第一个参数为用户名，第二个参数为密码，
+                     * @return 是否注册成功
+                     */
+                    @Override
+                    protected Boolean doInBackground(String... strings) {
+                        int code;
+                        try {
+                            code = httpPost(true,strings);
+                            Thread.sleep(2000);
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                            code = 0;
+                        }
+                        return code==1;
+                    }
+
+                    /**
+                     * 处理注册后事件
+                     * @param aBoolean 是否注册成功
+                     */
+                    @Override
+                    protected void onPostExecute(Boolean aBoolean) {
+                        super.onPostExecute(aBoolean);
+                        if(aBoolean){
+                            //注册成功写入数据到SharedPreferences
+                            mEditor.putString("userName",user_name.getText().toString());
+                            mEditor.putInt("loginState",1);
+                            mEditor.commit();
+
+                            //初始化user
+                            User loginUser = new User();
+                            loginUser.setUserName(user_name.getText().toString());
+                            loginUser.setPassword(password.getText().toString());
+                            loginUser.setOldUser(false);
+                            Bundle bundle = new Bundle();
+                            bundle.putSerializable("user", loginUser);
+                            bundle.putString("data", "RegisterSuccess");
+                            mIntent.putExtras(bundle);
+                            setResult(Activity.RESULT_OK, mIntent);
+                            Toast.makeText(LoginOrRegister.this, "注册成功", Toast.LENGTH_SHORT).show();
+                            finish();
+                        }else{
+                            Toast.makeText(LoginOrRegister.this, "注册失败，请检查网络连接", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }.execute(user_name.getText().toString(),password.getText().toString());
+
             }else{
                 Toast.makeText(LoginOrRegister.this,"请输入正确的用户名和密码",Toast.LENGTH_SHORT).show();
             }
         }
     }
 
+    /**
+     * 执行登录操作
+     * @param tag 是否注册操作
+     * @param strings 用户名和密码
+     * @return 登陆成功为1，登录失败为0
+     * @throws Exception 联网失败
+     */
+    private int httpPost(boolean tag,String...strings) throws Exception {
 
-    //使用Handler延迟处理ProgressDialog
-    private Handler mHandler = new Handler();
-    private Runnable mDialog_key = new Runnable() {
-        @Override
-        public void run() {
-            mProgressDialog.dismiss();
+        //网络连接的建立
+        URL url = new URL(URLSTRING);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setDoInput(true);
+        connection.setDoOutput(true);
+        connection.setRequestMethod("POST");
 
+        //获得输出流
+        OutputStreamWriter outputStreamWriter = new OutputStreamWriter(connection.getOutputStream(),"utf-8");
+        BufferedWriter bufferedWriter = new BufferedWriter(outputStreamWriter);
 
-            //登录成功写入数据到SharedPreferences
-            mEditor.putString("userName",user_name.getText().toString());
-            mEditor.putInt("loginState",1);
-            mEditor.commit();
+        //编写数据
+        JSONObject reqJson = new JSONObject();
+        reqJson.put("userName",strings[0]);
+        reqJson.put("password",strings[1]);
+        reqJson.put("isRegister",tag);
 
-            //登录成功 返回LoginSuccess字符串和User
-            User loginUser = new User();
-            loginUser.setUserName(user_name.getText().toString());
-            loginUser.setPassword(password.getText().toString());
-            loginUser.setOldUser(true);
-            Bundle bundle = new Bundle();
-            bundle.putSerializable("user",loginUser);
-            bundle.putString("data","LoginSuccess");
-            mIntent.putExtras(bundle);
-            setResult(Activity.RESULT_OK, mIntent);
-            finish();
+        //发送数据
+        bufferedWriter.write(reqJson.toString());
+        bufferedWriter.flush();
+
+        //获得输入流
+        InputStream inputStream = connection.getInputStream();
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream,"utf-8");
+        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+        //接收数据
+        StringBuilder data = new StringBuilder("");
+        String line;
+        while((line = bufferedReader.readLine())!=null){
+            data.append(line);
         }
-    };
+        JSONObject reply = new JSONObject(data.toString());
+
+        //关闭输入流
+        bufferedReader.close();
+        inputStreamReader.close();
+        inputStream.close();
+        return reply.getInt("RESULTCODE");
+    }
 
 }
 

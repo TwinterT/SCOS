@@ -8,13 +8,18 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.media.MediaPlayer;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
+import android.widget.RemoteViews;
 
 import es.source.code.activity.FoodDetailed;
+import es.source.code.activity.MainScreen;;
 import es.source.code.activity.R;
 import es.source.code.activity.SCOSEntry;
+import es.source.code.br.DeviceStartedListener;
 import es.source.code.model.FoodItems;
 
 
@@ -31,8 +36,9 @@ public class UpdateService extends IntentService {
         Bundle bundle = intent.getBundleExtra("message");
         String tag = bundle.getString("tag");
         if(tag == null){
-            //发送接收到库存更新信息
-            sendFoodMessage(bundle);
+        //发送接收到库存更新信息
+            sendRemoteMessage(bundle);
+//            sendFoodMessage(bundle);
         }else{
             //发送接收到开机启动完成信息
             sendBootStartMessage();
@@ -68,20 +74,20 @@ public class UpdateService extends IntentService {
 
 
     private void sendFoodMessage(Bundle bundle){
-        int number = bundle.getInt("number");
+        int type = bundle.getInt("type");
         int pos = bundle.getInt("pos");
         int storage = bundle.getInt("storage");
+        int price = bundle.getInt("price");
 
         String foodName;
-        int price;
         //初始化点击的intent数据
         Intent clickIntent = new Intent(UpdateService.this, FoodDetailed.class);
         String name;
-        switch (number){
-            case FoodItems.HOT_FOOD:name = "hotFood";foodName = FoodItems.hot_food_name[pos];price = FoodItems.hot_food_price[pos];break;
-            case FoodItems.COLD_FOOD:name = "coldFood";foodName = FoodItems.cold_food_name[pos];price = FoodItems.cold_food_price[pos];break;
-            case FoodItems.SEE_FOOD:name = "seeFood";foodName = FoodItems.see_food_name[pos];price = FoodItems.see_food_price[pos];break;
-            default:name = "drink";foodName = FoodItems.drink_name[pos];price = FoodItems.drink_price[pos];break;
+        switch (type){
+            case FoodItems.HOT_FOOD:name = "hotFood";foodName = FoodItems.hot_food_name[pos];break;
+            case FoodItems.COLD_FOOD:name = "coldFood";foodName = FoodItems.cold_food_name[pos];break;
+            case FoodItems.SEE_FOOD:name = "seeFood";foodName = FoodItems.see_food_name[pos];break;
+            default:name = "drink";foodName = FoodItems.drink_name[pos];break;
         }
         clickIntent.putExtra("data",name);
         clickIntent.putExtra("pos",pos);
@@ -109,5 +115,70 @@ public class UpdateService extends IntentService {
         //初始化通知管理并且发送通知
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.notify(R.string.app_name,notification);
+    }
+
+    private void sendRemoteMessage(Bundle bundle){
+
+        NotificationManager notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        int type = bundle.getInt("type");
+        int pos = bundle.getInt("pos");
+        int storage = bundle.getInt("storage");
+        int price = bundle.getInt("price");
+
+        Intent pIntent = new Intent(UpdateService.this,MainScreen.class);
+        String foodName;
+        String name;
+        switch (type){
+            case FoodItems.HOT_FOOD:name = "hotFood";foodName = FoodItems.hot_food_name[pos];break;
+            case FoodItems.COLD_FOOD:name = "coldFood";foodName = FoodItems.cold_food_name[pos];break;
+            case FoodItems.SEE_FOOD:name = "seeFood";foodName = FoodItems.see_food_name[pos];break;
+            default:name = "drink";foodName = FoodItems.drink_name[pos];break;
+        }
+        pIntent.putExtra("data",name);
+        pIntent.putExtra("pos",pos);
+
+        PendingIntent nIntent = PendingIntent.getActivity(UpdateService.this,R.string.app_name,pIntent,PendingIntent.FLAG_UPDATE_CURRENT);
+
+        RemoteViews notify_food = new RemoteViews(UpdateService.this.getPackageName(),R.layout.notification);
+
+        //设置通知栏组件内容和监听
+        notify_food.setTextViewText(R.id.notification_title,"新品上架！");
+        notify_food.setImageViewResource(R.id.notification_icon,R.drawable.logo);
+        String contentString = "类型：" + name + "菜名：" + foodName + "价格：" + price;
+        notify_food.setTextViewText(R.id.notification_content,contentString);
+        Intent intent = new Intent(this,DeviceStartedListener.class);
+        intent.setAction("es.source.code.NOTIFICATION_CANCEL");
+        PendingIntent intentLast = PendingIntent.getBroadcast(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
+        notify_food.setOnClickPendingIntent(R.id.notification_button,intentLast);
+        Notification.Builder builder;
+        //安卓8.0后的通知需要设置渠道否则不显示
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel notificationChannel = new NotificationChannel("SCOS","SCOS",NotificationManager.IMPORTANCE_HIGH);
+            notificationManager.createNotificationChannel(notificationChannel);
+            builder = new Notification.Builder(this,notificationChannel.getId());
+        }else{
+            builder = new Notification.Builder(UpdateService.this);
+        }
+        builder.setContentIntent(nIntent);
+        builder.setContent(notify_food);
+        builder.setTicker("新品上架！");
+        builder.setSmallIcon(R.drawable.logo);
+
+        Notification notify = builder.build();
+
+        notificationManager.notify(R.string.app_name,notify);
+
+        //播放声音
+        MediaPlayer mediaPlayer = MediaPlayer.create(this,Settings.System.DEFAULT_NOTIFICATION_URI);
+        mediaPlayer.start();
+        mediaPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                mp.release();
+            }
+        });
+
+
     }
 }

@@ -13,7 +13,16 @@ import android.os.RemoteException;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.EventBusBuilder;
 import org.greenrobot.eventbus.Subscribe;
+import org.json.JSONObject;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Random;
 
 import es.source.code.activity.FoodView;
@@ -25,6 +34,8 @@ public class ServerObserverService extends Service {
     public static final int MSG_BIND = -1;
 
     public static boolean ServiceRunningTag = false;
+
+    private static final String URLSTRING = "http://192.168.1.104:8080/SCOSServer/FoodUpdateService";
 
     //判断发送数据线程是否运行
     private boolean threadRunningTag = false;
@@ -90,22 +101,30 @@ public class ServerObserverService extends Service {
                 while(ServiceRunningTag){
 
                     if(threadRunningTag) {
-                        //四种类型的菜中随机选择一个
-                        int number = mRandom.nextInt(4) + 1;
-
-                        //在选中的菜品中随机选一个位置
-                        int pos = mRandom.nextInt(FoodItems.getName(number).length);
-
-                        //随机生成一个库存量
-                        int storage = mRandom.nextInt(30);
+                        JSONObject jsonObject;
+                        int type = 1,pos = 0,storage = 0,price = 0;
+                        try {
+                            jsonObject = httpGet();
+                            //四种类型的菜
+                            type = jsonObject.getInt("type");
+                            //在选中的菜品中的位置
+                            pos = jsonObject.getInt("pos");
+                            //库存量
+                            storage = jsonObject.getInt("storage");
+                            //价格
+                            price = jsonObject.getInt("price");
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
 
                         Message message = new Message();
 
                         //打包数据
                         Bundle bundle = new Bundle();
-                        bundle.putInt("number", number);
+                        bundle.putInt("type", type);
                         bundle.putInt("pos", pos);
                         bundle.putInt("storage", storage);
+                        bundle.putInt("price",price);
 
                         message.setData(bundle);
                         message.what = 10;
@@ -121,16 +140,44 @@ public class ServerObserverService extends Service {
                         Intent intent = new Intent(ServerObserverService.this,UpdateService.class);
                         intent.putExtra("message",bundle);
                         startService(intent);
-
                     }
-                    //休眠300ms
+                    //休眠3000ms
                     try {
-                        Thread.sleep(3000);
+                        Thread.sleep(6000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
             }
         }).start();
+    }
+
+    private JSONObject httpGet() throws Exception {
+        //网络连接的建立
+        URL url = new URL(URLSTRING);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setDoInput(true);
+        connection.setDoOutput(true);
+        connection.setRequestMethod("GET");
+
+
+        //获得输入流
+        InputStream inputStream = connection.getInputStream();
+        InputStreamReader inputStreamReader = new InputStreamReader(inputStream,"utf-8");
+        BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+        //接收数据
+        StringBuilder data = new StringBuilder("");
+        String line;
+        while((line = bufferedReader.readLine())!=null){
+            data.append(line);
+        }
+
+        //关闭输入流
+        bufferedReader.close();
+        inputStreamReader.close();
+        inputStream.close();
+
+        return new JSONObject(data.toString());
     }
 }
