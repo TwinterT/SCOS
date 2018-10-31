@@ -20,28 +20,35 @@ import es.source.code.activity.MainScreen;;
 import es.source.code.activity.R;
 import es.source.code.activity.SCOSEntry;
 import es.source.code.br.DeviceStartedListener;
-import es.source.code.model.FoodItems;
+import es.source.code.util.Constant;
+import es.source.code.util.FoodItems;
 
 
 public class UpdateService extends IntentService {
 
     public UpdateService() {
         super("UpdateService");
-
     }
 
     @Override
     protected void onHandleIntent(@Nullable Intent intent) {
+
         //获取intent中的数据
         Bundle bundle = intent.getBundleExtra("message");
-        String tag = bundle.getString("tag");
+        String tag = intent.getStringExtra("tag");
         if(tag == null){
         //发送接收到库存更新信息
             sendRemoteMessage(bundle);
-//            sendFoodMessage(bundle);
-        }else{
+        }else if(tag.equals("startSCOSEntry")){
             //发送接收到开机启动完成信息
+//            Bundle testBundle = new Bundle();
+//            testBundle.putInt("type",1);
+//            testBundle.putInt("pos",1);
+//            testBundle.putInt("storage",10);
+//            testBundle.putInt("price",40);
+//            sendRemoteMessage(testBundle);
             sendBootStartMessage();
+
         }
     }
 
@@ -70,6 +77,7 @@ public class UpdateService extends IntentService {
         //初始化通知管理并且发送通知
         NotificationManager mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         mNotificationManager.notify(R.string.app_name,notification);
+        startForeground(1, notification);
     }
 
 
@@ -82,12 +90,12 @@ public class UpdateService extends IntentService {
         String foodName;
         //初始化点击的intent数据
         Intent clickIntent = new Intent(UpdateService.this, FoodDetailed.class);
-        String name;
+        int name;
         switch (type){
-            case FoodItems.HOT_FOOD:name = "hotFood";foodName = FoodItems.hot_food_name[pos];break;
-            case FoodItems.COLD_FOOD:name = "coldFood";foodName = FoodItems.cold_food_name[pos];break;
-            case FoodItems.SEE_FOOD:name = "seeFood";foodName = FoodItems.see_food_name[pos];break;
-            default:name = "drink";foodName = FoodItems.drink_name[pos];break;
+            case FoodItems.HOT_FOOD:name = FoodItems.HOT_FOOD;foodName = FoodItems.hot_food_name[pos];break;
+            case FoodItems.COLD_FOOD:name = FoodItems.COLD_FOOD;foodName = FoodItems.cold_food_name[pos];break;
+            case FoodItems.SEE_FOOD:name = FoodItems.SEE_FOOD;foodName = FoodItems.see_food_name[pos];break;
+            default:name = FoodItems.DRINK;foodName = FoodItems.drink_name[pos];break;
         }
         clickIntent.putExtra("data",name);
         clickIntent.putExtra("pos",pos);
@@ -148,7 +156,7 @@ public class UpdateService extends IntentService {
         String contentString = "类型：" + name + "菜名：" + foodName + "价格：" + price;
         notify_food.setTextViewText(R.id.notification_content,contentString);
         Intent intent = new Intent(this,DeviceStartedListener.class);
-        intent.setAction("es.source.code.NOTIFICATION_CANCEL");
+        intent.setAction(Constant.CANCEL_NOTIFICATION_ACTION);
         PendingIntent intentLast = PendingIntent.getBroadcast(this,0,intent,PendingIntent.FLAG_UPDATE_CURRENT);
         notify_food.setOnClickPendingIntent(R.id.notification_button,intentLast);
         Notification.Builder builder;
@@ -178,7 +186,6 @@ public class UpdateService extends IntentService {
                 mp.release();
             }
         });
-
 
     }
 }

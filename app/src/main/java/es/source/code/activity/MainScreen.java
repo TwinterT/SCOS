@@ -1,6 +1,5 @@
 package es.source.code.activity;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -8,23 +7,39 @@ import android.graphics.drawable.Drawable;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.GridView;
-import android.widget.ListAdapter;
+import android.widget.TextView;
 import android.widget.Toast;
 
-import java.lang.reflect.Array;
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.JsonObjectRequest;
+import com.android.volley.toolbox.Volley;
+import com.baidu.location.BDLocation;
+import com.baidu.location.BDLocationListener;
+import com.baidu.location.LocationClient;
+import com.baidu.location.LocationClientOption;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
 import java.util.Arrays;
 
 import es.source.code.model.User;
 
 public class MainScreen extends AppCompatActivity{
 
-    public static final String MAINSCREEN_ACTION = "scos.intent.actioin.SCOSMAIN";
     private final String[] Strings = {"点菜","查看订单","登录/注册","系统帮助"};
     private final int[] images = {R.drawable.order, R.drawable.watch_order, R.drawable.login, R.drawable.help};
     private int ORDER = 0;
@@ -38,14 +53,28 @@ public class MainScreen extends AppCompatActivity{
     private Intent mIntent;
     private User user;
 
+    private TextView address;
+    private TextView temperature;
+
     private SharedPreferences mSharedPreferences;
 
     GridView mGridView;
+
+    private LocationClient mLocationClient;
+    private RequestQueue mRequestQueue;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main_screen);
+        Toolbar toolbar = findViewById(R.id.main_screen_toolbar);
+
+        setSupportActionBar(toolbar);
+
+
+        address = findViewById(R.id.main_screen_toolbar_address);
+        temperature = findViewById(R.id.main_screen_toolbar_degree);
+
 
         mIntent = getIntent();
 
@@ -58,6 +87,25 @@ public class MainScreen extends AppCompatActivity{
 
         setMStringsAndMImages();
         initGridViewListner();
+
+        //定位服务开始
+        initLocatOption();
+
+        findViewById(R.id.main_screen_toolbar_location).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainScreen.this,"获取地址中...",Toast.LENGTH_SHORT).show();
+                mLocationClient.start();
+            }
+        });
+
+        findViewById(R.id.main_screen_toolbar_address).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(MainScreen.this,"获取地址中...",Toast.LENGTH_SHORT).show();
+                mLocationClient.start();
+            }
+        });
 
     }
 
@@ -193,4 +241,104 @@ public class MainScreen extends AppCompatActivity{
     }
 
 
+    /**
+     * 初始化使用百度地图SDK定位的选项
+     */
+    private void initLocatOption(){
+        mLocationClient = new LocationClient(getApplicationContext());
+        mLocationClient.registerLocationListener(new BDLocationListener() {
+            @Override
+            public void onReceiveLocation(BDLocation bdLocation) {
+                StringBuilder stringBuilder = new StringBuilder(256);
+
+                //获得地址
+//                stringBuilder.append(bdLocation.getAddrStr());
+
+                //获得省份
+//                stringBuilder.append(bdLocation.getProvince());
+
+                //获得城市
+                String city = bdLocation.getCity();
+
+                stringBuilder.append(city);
+                stringBuilder.append(bdLocation.getDistrict());
+                stringBuilder.append(bdLocation.getStreet());
+
+                //根据城市来获得温度信息
+                getWeatherData(city.replace("市",""));
+
+                address.setText(stringBuilder.toString());
+            }
+        });
+        LocationClientOption option = new LocationClientOption();
+        //省电模式的定位
+        option.setLocationMode(LocationClientOption.LocationMode.Battery_Saving);
+        option.setCoorType("bd09ll");
+
+        option.setIsNeedAddress(true);//可选，设置是否需要地址信息，默认不需要
+        option.setOpenGps(true);//可选，默认false,设置是否使用gps
+        option.setLocationNotify(true);//可选，默认false，设置是否当GPS有效时按照1S/1次频率输出GPS结果
+        option.setIsNeedLocationDescribe(true);//可选，默认false，设置是否需要位置语义化结果，可以在BDLocation.getLocationDescribe里得到，结果类似于“在北京天安门附近”
+        option.setIsNeedLocationPoiList(true);//可选，默认false，设置是否需要POI结果，可以在BDLocation.getPoiList里得到
+        option.setIgnoreKillProcess(false);//可选，默认true，定位SDK内部是一个SERVICE，并放到了独立进程，设置是否在stop的时候杀死这个进程，默认不杀死
+        option.SetIgnoreCacheException(false);//可选，默认false，设置是否收集CRASH信息，默认收集
+        option.setEnableSimulateGps(false);//可选，默认false，设置是否需要过滤GPS仿真结果，默认需要
+        mLocationClient.setLocOption(option);
+
+        //开启定位
+        //mLocationClient.start();
+    }
+
+    /**
+     * 实现天气信息的获取
+     * @param city
+     */
+    private void getWeatherData(String city){
+        String cityCode = null;
+        mRequestQueue = Volley.newRequestQueue(this);
+        try {
+            cityCode = URLEncoder.encode(city,"utf-8");
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+        JsonObjectRequest jsonObjectRequest = new JsonObjectRequest("http://wthrcdn.etouch.cn/weather_mini?city=" + cityCode,  // 根据城市名获取天气JSon
+                null,
+                new Response.Listener<JSONObject>() {
+                    @Override
+                    public void onResponse(JSONObject response) {
+                        JSONObject data = null;
+                        try {
+                            data = new JSONObject(response.getString("data"));
+                            JSONArray forecast = data.getJSONArray("forecast");
+                            JSONObject todayWeather = forecast.getJSONObject(0);
+
+
+                            String wendu = data.getString("wendu");
+                            temperature.setText("当前温度："+wendu+"℃");
+                            //String ganmao = data.getString("ganmao");
+                            String high = todayWeather.getString("high");
+                            String low = todayWeather.getString("low") + "~";
+                            String date = todayWeather.getString("date") + "";
+                            String type = todayWeather.getString("type")+"\n";
+                            String city = data.getString("city") + "\n";
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                }, new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError error) {
+                Log.e("TAG", error.getMessage(), error);
+            }
+        });
+
+        mRequestQueue.add(jsonObjectRequest);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        mLocationClient.stop();
+    }
 }

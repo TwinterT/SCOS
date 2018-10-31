@@ -8,8 +8,21 @@
         <item name="colorAccent">@color/colorAccent</item>
     </style>
 
+    <style name="MyAppThem" parent="Theme.AppCompat.Light">
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">#303030</item>
+        <item name="colorPrimaryDark">#303030</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
     <style name="FoodView" parent="@android:style/Theme.Holo.Light">
         <item name="android:actionBarStyle">@style/FoodView</item>
     </style>
-    
+
+    <style name="MainScreenStyle" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">#303030</item>
+        <!-- 状态栏的颜色 -->
+        <item name="colorPrimaryDark">#303030</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
 </resources>

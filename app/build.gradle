@@ -4,10 +4,10 @@ android {
     compileSdkVersion 28
     defaultConfig {
         applicationId "es.source.code.activity"
-        minSdkVersion 16
+        minSdkVersion 21
         targetSdkVersion 28
-        versionCode 4
-        versionName "4"
+        versionCode 5
+        versionName "4.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -38,4 +38,6 @@ dependencies {
     implementation files('libs/additionnal.jar')
     implementation files('libs/mail.jar')
     implementation 'org.greenrobot:eventbus:3.1.1'
+    implementation files('libs/BaiduLBS_Android.jar')
+    implementation 'eu.the4thfloor.volley:com.android.volley:2015.05.28'
 }

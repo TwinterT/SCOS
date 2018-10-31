@@ -4,4 +4,9 @@
     <string name="watch_order">查看订单</string>
     <string name="login">登录/注册</string>
     <string name="help">系统帮助</string>
+    <string name="entry_right_describe">Copyright© 2018 winter</string>
+    <string name="food_view_hotfood">热菜</string>
+    <string name="food_view_coldfood">凉菜</string>
+    <string name="food_view_seefood">海鲜</string>
+    <string name="food_view_drink">酒水</string>
 </resources>

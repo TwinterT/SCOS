@@ -7,6 +7,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -16,10 +17,12 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import java.util.List;
 
-import es.source.code.model.FoodItems;
+import es.source.code.util.FoodItems;
 import es.source.code.model.User;
 
 public class FoodDetailed extends AppCompatActivity {
+
+    private static final String TAG = "FoodDetailed";
 
     private Intent mIntent;
 
@@ -29,7 +32,7 @@ public class FoodDetailed extends AppCompatActivity {
 
     private User user;
 
-    private String name;
+    private int name;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,8 +43,9 @@ public class FoodDetailed extends AppCompatActivity {
         mViewList = new ArrayList<>();
 
         mIntent = getIntent();
-        name = mIntent.getStringExtra("data");
+        name = mIntent.getIntExtra("data",1);
         int pos = mIntent.getIntExtra("pos",0);
+        Log.d(TAG, "onCreate: "+pos);
         String tag = mIntent.getStringExtra("tag");
         user = (User)mIntent.getSerializableExtra("user");
 
@@ -58,14 +62,14 @@ public class FoodDetailed extends AppCompatActivity {
      * @param message 传来的列表名字
      * @param tag  列表中所有食物点菜的状态（0，1），退点还是点菜
      */
-    private void initViewList(String message,String tag){
-        if(message.equals("hotFood")){
+    private void initViewList(int message,String tag){
+        if(message == User.HOTFOOD){
             initViewList(FoodItems.hot_food_name,FoodItems.hot_food_price,FoodItems.hot_food_image,tag,message);
-        }else if(message.equals("coldFood")){
+        }else if(message == User.COLDFOOD){
             initViewList(FoodItems.cold_food_name,FoodItems.cold_food_price,FoodItems.cold_food_image,tag,message);
-        }else if(message.equals("seeFood")){
+        }else if(message == User.SEEFOOD){
             initViewList(FoodItems.see_food_name,FoodItems.see_food_price,FoodItems.see_food_image,tag,message);
-        }else if(message.equals("drink")){
+        }else if(message == User.DRINK){
             initViewList(FoodItems.drink_name,FoodItems.drink_price,FoodItems.drink_image,tag,message);
         }
     }
@@ -78,7 +82,7 @@ public class FoodDetailed extends AppCompatActivity {
      * @param tag 列表食物的所有点菜状态（0，1）
      * @param message  列表名字
      */
-    private void initViewList(String[] names, int[] prices, int[] images, String tag, final String message){
+    private void initViewList(String[] names, int[] prices, int[] images, String tag, final int message){
 
 
         for(int i = 0 ;i<names.length;i++){
@@ -98,27 +102,11 @@ public class FoodDetailed extends AppCompatActivity {
                         if(button.getText().toString().equals("退点")){
                             button.setText("点菜");
                             button.setTextColor(Color.BLACK);
-                            if(message.equals("hotFood")){
-                                user.setTagPositionHotFood(finalI,'0');
-                            }else if(message.equals("coldFood")){
-                                user.setTagPositionColdFood(finalI,'0');
-                            }else if(message.equals("seeFood")){
-                                user.setTagPositionSeeFood(finalI,'0');
-                            }else if(message.equals("drink")){
-                                user.setTagPositionDrink(finalI,'0');
-                            }
+                            user.setTagPosition(message,finalI,'0');
                         }else if(button.getText().toString().equals("点菜")){
                             button.setText("退点");
                             button.setTextColor(Color.RED);
-                            if(message.equals("hotFood")){
-                                user.setTagPositionHotFood(finalI,'1');
-                            }else if(message.equals("coldFood")){
-                                user.setTagPositionColdFood(finalI,'1');
-                            }else if(message.equals("seeFood")){
-                                user.setTagPositionSeeFood(finalI,'1');
-                            }else if(message.equals("drink")){
-                                user.setTagPositionDrink(finalI,'1');
-                            }
+                            user.setTagPosition(message,finalI,'1');
                         }
                     }
                 });

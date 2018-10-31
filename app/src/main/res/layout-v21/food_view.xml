@@ -33,44 +33,45 @@
         android:id="@+id/food_view_tabLayout"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:background="#BDC3C7"
+        android:background="#ffffff"
         app:tabGravity="fill"
         app:tabIndicatorHeight="0dp"
         app:tabMode="fixed"
-        app:tabSelectedTextColor="#ffffff"
-        app:tabTextColor="#000">
+        app:tabSelectedTextColor="#000000"
+        app:tabTextColor="@android:color/darker_gray"
+        >
 
 
         <android.support.design.widget.TabItem
             android:id="@+id/food_item_coldDish"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:icon="@drawable/order"
-            android:text="凉菜"
+            android:icon="@drawable/hotfood"
+            android:text="@string/food_view_hotfood"
             android:visibility="visible" />
 
         <android.support.design.widget.TabItem
             android:id="@+id/food_item_hotDish"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:icon="@drawable/watch_order"
-            android:text="热菜"
+            android:icon="@drawable/coldfood"
+            android:text="@string/food_view_coldfood"
             android:visibility="visible" />
 
         <android.support.design.widget.TabItem
             android:id="@+id/food_item_seefood"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:icon="@drawable/login"
-            android:text="海鲜"
+            android:icon="@drawable/fish"
+            android:text="@string/food_view_seefood"
             android:visibility="visible" />
 
         <android.support.design.widget.TabItem
             android:id="@+id/food_item_drinks"
             android:layout_width="wrap_content"
             android:layout_height="50dp"
-            android:icon="@drawable/help"
-            android:text="酒水"
+            android:icon="@drawable/drink"
+            android:text="@string/food_view_drink"
             android:visibility="visible" />
 
     </android.support.design.widget.TabLayout>

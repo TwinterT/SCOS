@@ -10,7 +10,8 @@
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
-
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
 
     <permission
@@ -24,11 +25,21 @@
     <!-- theme用于指定该App的显示风格 -->
     <application
         android:allowBackup="true"
-        android:icon="@drawable/launch"
+        android:icon="@drawable/logo"
         android:label="@string/app_name"
-        android:roundIcon="@drawable/launch"
+        android:roundIcon="@drawable/logo"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/MyAppThem">
+
+        <meta-data android:name="com.baidu.lbsapi.API_KEY"
+            android:value="iiiV169NCf9lNf4cslQILSfMtlMiBwdc"/>
+        <service android:name="com.baidu.location.f"
+            android:enabled="true"
+            android:process=":remote">
+
+        </service>
+
+
         <activity android:name=".SCOSEntry">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -40,7 +51,8 @@
             android:name=".MainScreen"
             android:exported="true"
             android:launchMode="singleTop"
-            android:permission="scos.permission.ACCESSSCOS">
+            android:permission="scos.permission.ACCESSSCOS"
+            android:theme="@style/MainScreenStyle">
             <intent-filter>
                 <action android:name="scos.intent.actioin.SCOSMAIN" />
                 <!-- default属性必须加，不然无法跳转至该Activity -->
@@ -63,6 +75,7 @@
             android:enabled="true"
             android:exported="true"
             android:process="es.source.code.observerservice" />
+
         <service
             android:name="es.source.code.service.UpdateService"
             android:exported="true"
@@ -70,6 +83,7 @@
             android:process="es.source.code.updateservice">
             <intent-filter>
                 <action android:name="es.source.code.service.openUpdateService"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
         </service>
 
@@ -78,9 +92,10 @@
             android:enabled="true"
             android:exported="true"
             android:process="es.source.code.divicestartedlistener">
-            <intent-filter android:priority="10000">
+            <intent-filter >
                 <action android:name="es.source.code.NOTIFICATION_CANCEL" />
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <category android:name="android.intent.category.DEFAULT"/>
             </intent-filter>
 
         </receiver>

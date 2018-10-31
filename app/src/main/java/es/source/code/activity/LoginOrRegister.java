@@ -4,13 +4,9 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.text.Editable;
@@ -25,21 +21,18 @@ import org.json.JSONObject;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import es.source.code.model.User;
+import es.source.code.util.Constant;
 
 public class LoginOrRegister extends AppCompatActivity implements View.OnClickListener{
-
-    private String URLSTRING = "http://192.168.1.104:8080/SCOSServer/LoginValidator";
 
     private EditText user_name;
     private EditText password;
@@ -306,7 +299,7 @@ public class LoginOrRegister extends AppCompatActivity implements View.OnClickLi
     private int httpPost(boolean tag,String...strings) throws Exception {
 
         //网络连接的建立
-        URL url = new URL(URLSTRING);
+        URL url = new URL(Constant.URLLogin);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setDoInput(true);
         connection.setDoOutput(true);

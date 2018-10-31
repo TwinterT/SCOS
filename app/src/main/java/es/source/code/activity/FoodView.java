@@ -2,6 +2,7 @@ package es.source.code.activity;
 
 
 import android.annotation.SuppressLint;
+import android.content.ClipData;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -19,61 +20,58 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.BaseAdapter;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.ListView;
-import android.widget.TextView;
+import android.widget.LinearLayout;
 import android.widget.Toast;
 import android.support.v7.widget.Toolbar;
-
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.Subscribe;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import es.source.code.model.EventBusMessage;
-import es.source.code.model.FoodItems;
+import es.source.code.util.FoodItems;
 import es.source.code.model.User;
 import es.source.code.service.ServerObserverService;
+import es.source.code.util.FoodViewDecoration;
+import es.source.code.util.FoodViewHolder;
+import es.source.code.util.FoodViewRecyclerAdapter;
 
 public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelectedListener, ServiceConnection{
 
-    private final String ORDER = "点菜";
-    private final String UNSUBSCRIBE = "退点";
+    public static final String ORDER = "点菜";
+    public static final String UNSUBSCRIBE = "退点";
 
     private TabLayout mTabLayout;
     private ViewPager mViewPager;
     private Toolbar mToolbar;
 
-    private View hotFoodView;
-    private BaseAdapter hotFoodAdapter;
-    private ListView hotFoodListView;
+    private RecyclerView hotFoodRecyclerView;
+    private FoodViewRecyclerAdapter hotFoodRecyclerViewAdapter;
 
-    private View coldFoodView;
-    private BaseAdapter coldFoodAdapter;
-    private ListView coldFoodListView;
+    private RecyclerView coldFoodRecyclerView;
+    private FoodViewRecyclerAdapter coldFoodRecyclerViewAdapter;
 
-    private View seeFoodView;
-    private BaseAdapter seeFoodAdapter;
-    private ListView seeFoodListView;
+    private RecyclerView seeFoodRecyclerView;
+    private FoodViewRecyclerAdapter seeFoodRecyclerViewAdapter;
 
-    private View drinkView;
-    private BaseAdapter drinkAdapter;
-    private ListView drinkListView;
+    private RecyclerView drinkRecyclerView;
+    private FoodViewRecyclerAdapter drinkRecyclerViewAdapter;
+
 
     private List<View> mViewList;
 
     private Intent mIntent;
 
     private User user;
+
+    private boolean isBind = false;
+
+    private MenuItem item;
 
     //FoodView的handler
     @SuppressLint("HandlerLeak")
@@ -92,22 +90,23 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
                     case FoodItems.HOT_FOOD:
                         FoodItems.hot_food_storage[pos] = storage;
                         FoodItems.hot_food_price[pos] = price;
-                        hotFoodAdapter.notifyDataSetChanged();
+ //                       hotFoodAdapter.notifyDataSetChanged();
+                        hotFoodRecyclerViewAdapter.notifyDataSetChanged();
                         break;
                     case FoodItems.COLD_FOOD:
                         FoodItems.cold_food_storage[pos] = storage;
                         FoodItems.cold_food_price[pos] = price;
-                        coldFoodAdapter.notifyDataSetChanged();
+                        coldFoodRecyclerViewAdapter.notifyDataSetChanged();
                         break;
                     case FoodItems.SEE_FOOD:
                         FoodItems.see_food_storage[pos] = storage;
                         FoodItems.see_food_price[pos] = price;
-                        seeFoodAdapter.notifyDataSetChanged();
+                        seeFoodRecyclerViewAdapter.notifyDataSetChanged();
                         break;
                     case FoodItems.DRINK:
                         FoodItems.drink_storage[pos] = storage;
                         FoodItems.drink_price[pos] = price;
-                        drinkAdapter.notifyDataSetChanged();
+                        drinkRecyclerViewAdapter.notifyDataSetChanged();
                         break;
                     default:
                 }
@@ -122,14 +121,10 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.food_view);
+        getWindow().setStatusBarColor(Color.parseColor("#303030"));
 
         mIntent = getIntent();
         user = (User)mIntent.getSerializableExtra("user");
-
-        //启动服务
-        Intent intent = new Intent(FoodView.this, ServerObserverService.class);
-        //使用handle发送信息
-        bindService(intent,FoodView.this, Context.BIND_AUTO_CREATE);
 
         initComponent();
         initTabViewPager();
@@ -137,11 +132,45 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
 
         initListAdapter();
 
-        initListView(hotFoodListView,hotFoodAdapter);
-        initListView(coldFoodListView,coldFoodAdapter);
-        initListView(seeFoodListView,seeFoodAdapter);
-        initListView(drinkListView,drinkAdapter);
+        initRecycleView(User.HOTFOOD,hotFoodRecyclerView,hotFoodRecyclerViewAdapter);
+        initRecycleView(User.COLDFOOD,coldFoodRecyclerView,coldFoodRecyclerViewAdapter);
+        initRecycleView(User.SEEFOOD,seeFoodRecyclerView,seeFoodRecyclerViewAdapter);
+        initRecycleView(User.DRINK,drinkRecyclerView,drinkRecyclerViewAdapter);
+
+        mToolbar.setTitleTextColor(Color.parseColor("#ffffff"));
     }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        //启动服务
+        Intent intent = new Intent(FoodView.this, ServerObserverService.class);
+        //使用handle发送信息
+        bindService(intent,FoodView.this, Context.BIND_AUTO_CREATE);
+    }
+
+    private void initRecycleView(final int flag, RecyclerView recyclerView, FoodViewRecyclerAdapter adapter){
+        adapter.setOnItemClickListener(new FoodViewHolder.MyRecycleOnClickListener() {
+            @Override
+            public void onItemClidked(View v, int pos) {
+                Intent intent = new Intent(FoodView.this,FoodDetailed.class);
+                String tag = "";
+                tag = user.getTag(flag).toString();
+                intent.putExtra("data",flag);
+                intent.putExtra("pos",pos);
+                intent.putExtra("tag",tag);
+                intent.putExtra("user",user);
+                startActivityForResult(intent,1);
+            }
+        });
+
+        recyclerView.setAdapter(adapter);
+
+        //显示分割线
+        recyclerView.setBackgroundColor(Color.DKGRAY);
+        recyclerView.addItemDecoration(new FoodViewDecoration());
+    }
+
 
     /**
      * 初始化各个组件
@@ -150,182 +179,42 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
         mTabLayout = findViewById(R.id.food_view_tabLayout);
         mViewPager = findViewById(R.id.food_view_viewPager);
 
-        hotFoodView = getLayoutInflater().inflate(R.layout.hot_food,null);
-        coldFoodView = getLayoutInflater().inflate(R.layout.cold_food,null);
-        seeFoodView = getLayoutInflater().inflate(R.layout.see_food,null);
-        drinkView = getLayoutInflater().inflate(R.layout.drinks,null);
+        hotFoodRecyclerView = new RecyclerView(this);
+        hotFoodRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayout.VERTICAL,false));
+
+        coldFoodRecyclerView = new RecyclerView(this);
+        coldFoodRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayout.VERTICAL,false));
+
+        seeFoodRecyclerView = new RecyclerView(this);
+        seeFoodRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayout.VERTICAL,false));
+
+        drinkRecyclerView = new RecyclerView(this);
+        drinkRecyclerView.setLayoutManager(new LinearLayoutManager(this, LinearLayout.VERTICAL,false));
 
         mViewList = new ArrayList<>();
-        mViewList.add(hotFoodView);
-        mViewList.add(coldFoodView);
-        mViewList.add(seeFoodView);
-        mViewList.add(drinkView);
+        mViewList.add(hotFoodRecyclerView);
+        mViewList.add(coldFoodRecyclerView);
+        mViewList.add(seeFoodRecyclerView);
+        mViewList.add(drinkRecyclerView);
+
 
         mTabLayout.setOnTabSelectedListener(this);
 
-        hotFoodListView = hotFoodView.findViewById(R.id.hot_food_list_view);
-        coldFoodListView = coldFoodView.findViewById(R.id.cold_food_list_view);
-        seeFoodListView = seeFoodView.findViewById(R.id.see_food_list_view);
-        drinkListView = drinkView.findViewById(R.id.drinks_list_view);
-
         mToolbar = findViewById(R.id.food_view_toolbar);
+        mToolbar.setBackgroundColor(Color.parseColor("#303030"));
+
+
+        item = findViewById(R.id.food_view_startService);
     }
 
     private void initListAdapter(){
-        hotFoodAdapter = new MyBaseAdapter(FoodItems.hot_food_name,FoodItems.hot_food_image,FoodItems.hot_food_price,FoodItems.hot_food_storage);
-        coldFoodAdapter = new MyBaseAdapter(FoodItems.cold_food_name,FoodItems.cold_food_image,FoodItems.cold_food_price,FoodItems.cold_food_storage);
-        seeFoodAdapter = new MyBaseAdapter(FoodItems.see_food_name,FoodItems.see_food_image,FoodItems.see_food_price,FoodItems.see_food_storage);
-        drinkAdapter = new MyBaseAdapter(FoodItems.drink_name,FoodItems.drink_image,FoodItems.drink_price,FoodItems.drink_storage);
+        hotFoodRecyclerViewAdapter = new FoodViewRecyclerAdapter(User.HOTFOOD,FoodItems.hot_food_name,FoodItems.hot_food_image,FoodItems.hot_food_price,FoodItems.hot_food_storage,this,user);
+        coldFoodRecyclerViewAdapter = new FoodViewRecyclerAdapter(User.COLDFOOD,FoodItems.cold_food_name,FoodItems.cold_food_image,FoodItems.cold_food_price,FoodItems.cold_food_storage,this,user);
+        seeFoodRecyclerViewAdapter = new FoodViewRecyclerAdapter(User.SEEFOOD,FoodItems.see_food_name,FoodItems.see_food_image,FoodItems.see_food_price,FoodItems.see_food_storage,this,user);
+        drinkRecyclerViewAdapter = new FoodViewRecyclerAdapter(User.DRINK,FoodItems.drink_name,FoodItems.drink_image,FoodItems.drink_price,FoodItems.drink_storage,this,user);
+
+
     }
-
-    /**
-     * 初始化listView组件
-     * @param listView   需要被初始化的listview
-     * @param baseAdapter 适配器
-     */
-    private void initListView(final ListView listView,BaseAdapter baseAdapter){
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent intent = new Intent(FoodView.this,FoodDetailed.class);
-                String str = "";
-                String tag = "";
-                if(parent == hotFoodListView){
-                    str = "hotFood";
-                    tag = user.getTagHotFood().toString();
-                }
-                else if(parent == coldFoodListView){
-                    str = "coldFood";
-                    tag = user.getTagColdFood().toString();
-                }
-                else if(parent == seeFoodListView){
-                    str = "seeFood";
-                    tag = user.getTagSeeFood().toString();
-                }
-                else if(parent == drinkListView){
-                    str = "drink";
-                    tag = user.getTagDrink().toString();
-                }
-                intent.putExtra("data",str);
-                intent.putExtra("pos",position);
-                intent.putExtra("tag",tag);
-                intent.putExtra("user",user);
-                startActivityForResult(intent,1);
-            }
-        });
-
-        listView.setAdapter(baseAdapter);
-    }
-
-    /**
-     * 自定义的listview的适配器类
-     */
-    private class MyBaseAdapter extends BaseAdapter{
-        private String[] names;
-        private int[] images;
-        private int[] prices;
-        private int[] storage;
-
-        public MyBaseAdapter(String[] names,int[] images,int[] prices,int[] storage){
-            this.names = names;
-            this.images = images;
-            this.prices = prices;
-            this.storage = storage;
-        }
-        @Override
-        public int getCount() {
-            return names.length;
-
-        }
-
-        @Override
-        public Object getItem(int position) {
-            return names[position];
-        }
-
-        @Override
-        public long getItemId(int position) {
-            return position;
-        }
-
-        @Override
-        public View getView(final int position, View convertView, final ViewGroup parent) {
-            if(convertView == null){
-                convertView = getLayoutInflater().inflate(R.layout.dishes_item, parent, false);
-            }
-
-            ImageView imageView = convertView.findViewById(R.id.order_item_image);
-            imageView.setImageResource(images[position]);
-
-            TextView textView_name = convertView.findViewById(R.id.order_item_name);
-            textView_name.setText(names[position]);
-
-            TextView textView_price = convertView.findViewById(R.id.order_item_price);
-            textView_price.setText(""+prices[position]+" 元");
-
-            TextView textView_storage = convertView.findViewById(R.id.order_item_storage);
-
-            final Button button = convertView.findViewById(R.id.order_item_button);
-            int store = storage[position];
-            int k = 0;
-            if(parent == hotFoodListView){
-                k = user.getTagPositionHotFood(position);
-            }else if(parent == coldFoodListView){
-                k = user.getTagPositionColdFood(position);
-            }else if(parent == seeFoodListView){
-                k = user.getTagPositionSeeFood(position);
-            }else if(parent == drinkListView){
-                k = user.getTagPositionDrink(position);
-            }
-
-            textView_storage.setText("库存 " + store + " 份");
-
-            if(k == 0){
-                button.setText(ORDER);
-                button.setTextColor(Color.BLACK);
-            }
-            else if(k==1){
-                button.setText(UNSUBSCRIBE);
-                button.setTextColor(Color.RED);
-            }
-
-            button.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if(button.getText().toString().equals(ORDER)){
-                        Toast.makeText(FoodView.this,"点菜成功 " + getItemId(position),Toast.LENGTH_SHORT).show();
-                        if(parent == hotFoodListView){
-                            user.setTagPositionHotFood(position,'1');
-                        }else if(parent == coldFoodListView){
-                            user.setTagPositionColdFood(position,'1');
-                        }else if(parent == seeFoodListView){
-                            user.setTagPositionSeeFood(position,'1');
-                        }else if(parent == drinkListView){
-                            user.setTagPositionDrink(position,'1');
-                        }
-                        button.setText(UNSUBSCRIBE);
-                        button.setTextColor(Color.RED);
-                    }else if(button.getText().toString().equals(UNSUBSCRIBE)){
-                        Toast.makeText(FoodView.this,"退点成功 " + getItemId(position),Toast.LENGTH_SHORT).show();
-                        if(parent == hotFoodListView){
-                            user.setTagPositionHotFood(position,'0');
-                        }else if(parent == coldFoodListView){
-                            user.setTagPositionColdFood(position,'0');
-                        }else if(parent == seeFoodListView){
-                            user.setTagPositionSeeFood(position,'0');
-                        }else if(parent == drinkListView){
-                            user.setTagPositionDrink(position,'0');
-                        }
-                        button.setText(ORDER);
-                        button.setTextColor(Color.BLACK);
-                    }
-                }
-            });
-
-            return convertView;
-        }
-    }
-
 
     /**
      * 初始化ViewPager
@@ -453,6 +342,7 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
                         e.printStackTrace();
                     }
 
+
                 }else if(item.getTitle().equals("停止实时更新")){
                     item.setTitle("启动实时更新");
 
@@ -481,6 +371,8 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
      */
     @Override
     public void onServiceConnected(ComponentName name, IBinder service) {
+
+        isBind = true;
         //获得service的messenger
         serviceMessenger = new Messenger(service);
 
@@ -518,10 +410,17 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
      */
     @Override
     public void onBackPressed() {
-        unbindService(FoodView.this);
         mIntent.putExtra("user",user);
         setResult(1,mIntent);
         finish();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if(isBind){
+            unbindService(FoodView.this);
+        }
     }
 
     /**
@@ -535,27 +434,28 @@ public class FoodView extends AppCompatActivity implements TabLayout.OnTabSelect
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == 1){
             user = (User)data.getSerializableExtra("user");
-            String name = data.getStringExtra("name");
-            BaseAdapter adapter = null;
-            if(name.equals("hotFood")){
-                adapter = (BaseAdapter) hotFoodListView.getAdapter();
-            }else if(name.equals("coldFood")){
-                adapter = (BaseAdapter) coldFoodListView.getAdapter();
-            }else if(name.equals("seeFood")){
-                adapter = (BaseAdapter) seeFoodListView.getAdapter();
-            }else if(name.equals("drink")){
-                adapter = (BaseAdapter) drinkListView.getAdapter();
+            int name = data.getIntExtra("name",0);
+            if(name == User.HOTFOOD){
+                hotFoodRecyclerViewAdapter.notifyDataSetChanged();
+            }else if(name == User.COLDFOOD){
+               coldFoodRecyclerViewAdapter.notifyDataSetChanged();
+            }else if(name == User.SEEFOOD){
+                seeFoodRecyclerViewAdapter.notifyDataSetChanged();
+            }else if(name == User.DRINK){
+                drinkRecyclerViewAdapter.notifyDataSetChanged();
             }
-            adapter.notifyDataSetChanged();
+
         }else if(requestCode == 0){
             user = (User)data.getSerializableExtra("user");
-            initListView(hotFoodListView,hotFoodAdapter);
-            initListView(coldFoodListView,coldFoodAdapter);
-            initListView(seeFoodListView,seeFoodAdapter);
-            initListView(drinkListView,drinkAdapter);
+            System.out.println("--------------------------------flush");
+            initListAdapter();
+
+            initRecycleView(User.HOTFOOD,hotFoodRecyclerView,hotFoodRecyclerViewAdapter);
+            initRecycleView(User.COLDFOOD,coldFoodRecyclerView,coldFoodRecyclerViewAdapter);
+            initRecycleView(User.SEEFOOD,seeFoodRecyclerView,seeFoodRecyclerViewAdapter);
+            initRecycleView(User.DRINK,drinkRecyclerView,drinkRecyclerViewAdapter);
         }
     }
-
 }
 
 

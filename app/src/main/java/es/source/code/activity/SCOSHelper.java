@@ -1,7 +1,6 @@
 package es.source.code.activity;
 
 import android.Manifest;
-import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -10,9 +9,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.net.Uri;
-import android.os.Handler;
 
-import android.os.Message;
 import android.provider.Settings;
 
 import android.support.annotation.NonNull;
@@ -34,18 +31,8 @@ import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
-import java.util.Properties;
-
-import javax.activation.DataHandler;
-import javax.mail.Authenticator;
-import javax.mail.PasswordAuthentication;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeMessage;
-import javax.mail.util.ByteArrayDataSource;
-
 import es.source.code.model.EventBusMessage;
+import es.source.code.util.MailSender;
 
 
 public class SCOSHelper extends AppCompatActivity {
@@ -56,25 +43,6 @@ public class SCOSHelper extends AppCompatActivity {
     final private String[] mStrings = {"用户使用协议", "关于系统", "电话人工帮助", "短信帮助", "邮件帮助"};
 
     private GridView mGridView;
-
-
-//    //处理接收邮件发送是否成功的信息
-//    @SuppressLint("HandlerLeak")
-//    private Handler mHandler = new Handler(){
-//        @Override
-//        public void handleMessage(Message msg) {
-//            super.handleMessage(msg);
-//            if(msg.what == 1){
-//                Toast.makeText(SCOSHelper.this,"邮件发送成功",Toast.LENGTH_SHORT).show();
-//            }else if(msg.what == -1){
-//                Toast.makeText(SCOSHelper.this,"正在发送邮件...",Toast.LENGTH_SHORT).show();
-//                Toast.makeText(SCOSHelper.this,"邮件发送中，请耐心等待",Toast.LENGTH_LONG).show();
-//            }else{
-//                Toast.makeText(SCOSHelper.this,"邮件发送失败",Toast.LENGTH_SHORT).show();
-//
-//            }
-//        }
-//    };
 
 
     @Override
@@ -172,9 +140,6 @@ public class SCOSHelper extends AppCompatActivity {
      * 处理电话帮助
      */
     private void telephoneHelp() {
-//        Toast.makeText(SCOSHelper.this, "处理电话帮助", Toast.LENGTH_SHORT).show();
-//        Uri uri = Uri.parse("tel:5554");
-//        Intent intent = new Intent(Intent.ACTION_CALL, uri);
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) != PackageManager.PERMISSION_GRANTED) {
             if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.CALL_PHONE)) {
 
@@ -191,7 +156,6 @@ public class SCOSHelper extends AppCompatActivity {
         } else {
             makePhoneCall();
         }
-//        startActivity(intent);
     }
 
     private void makePhoneCall() {
@@ -259,15 +223,12 @@ public class SCOSHelper extends AppCompatActivity {
             @Override
             public void run() {
                 EventBus.getDefault().post(new EventBusMessage("-1"));
-//                mHandler.sendEmptyMessage(-1);
                 try {
                     sendEmail();
                     EventBus.getDefault().post(new EventBusMessage("1"));
-//                    mHandler.sendEmptyMessage(1);
                 } catch (Exception e) {
                     e.printStackTrace();
                     EventBus.getDefault().post(new EventBusMessage("0"));
-//                    mHandler.sendEmptyMessage(0);
                 }
 
             }
@@ -280,7 +241,7 @@ public class SCOSHelper extends AppCompatActivity {
     private void sendEmail() throws Exception {
 
         MailSender sender = new MailSender("18651400987@163.com", "winter1996");
-        sender.sendMail("SCOSHelper", "There is some trouble when using scos!","18651400987@163.com", "1012179010@qq.com");
+        sender.sendMail("帮助", "在运行软件中出现问题，收到请回复！！！","18651400987@163.com", "twinter@mail.ustc.edu.cn");
 
     }
 
@@ -309,68 +270,3 @@ public class SCOSHelper extends AppCompatActivity {
 }
 
 
-/**
- * 处理邮件的类
- */
-class  MailSender extends Authenticator {
-    //服务器地址
-    private String mailhost = "smtp.163.com";
-    //用于发送邮件的邮箱地址
-    private String user;
-
-    //用于发送邮件的邮箱密码
-    private String password;
-
-    //会话（每创建一次连接就要有一个会话）
-    private Session session;
-
-
-    public MailSender(String user, String password) {
-        this.user = user;
-        this.password = password;
-
-        //创建连接属性
-        Properties props = new Properties();
-
-        //设置通信协议
-        props.setProperty("mail.transport.protocol", "SMTP");
-
-        //设置服务器地址
-        props.setProperty("mail.smtp.host", mailhost);
-
-        //设置是否需要SMTP身份验证
-        props.put("mail.smtp.auth", "true");
-        //设置SSL协议端口号
-        props.put("mail.smtp.port", "25");
-
-
-        session = Session.getInstance(props,this);
-    }
-    protected PasswordAuthentication getPasswordAuthentication() {
-        return new PasswordAuthentication(user, password);
-    }
-    public synchronized void sendMail(String subject, String body, String sender, String recipients) throws Exception {
-        //创建邮件体
-        MimeMessage message = new MimeMessage(session);
-        DataHandler handler = new DataHandler(new ByteArrayDataSource(body.getBytes(), "text/plain"));
-        message.setSender(new InternetAddress(sender));
-        message.setSubject(subject);
-        message.setDataHandler(handler);
-        if (recipients.indexOf(',') > 0)
-            message.setRecipients(javax.mail.Message.RecipientType.TO, InternetAddress.parse(recipients));
-        else
-            message.setRecipient(javax.mail.Message.RecipientType.TO, new InternetAddress(recipients));
-        message.saveChanges();
-
-
-        session.setDebug(true);
-        //创建连接
-        Transport trans = session.getTransport("smtp");
-        //连接服务器
-        trans.connect(mailhost,user, password);
-
-        //发送消息
-        trans.send(message);
-
-    }
-}

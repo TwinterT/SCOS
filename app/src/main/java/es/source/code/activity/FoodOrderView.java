@@ -13,6 +13,8 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -26,7 +28,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
 
-import es.source.code.model.FoodItems;
+import es.source.code.util.FoodItems;
 import es.source.code.model.User;
 
 public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabSelectedListener{
@@ -53,7 +55,7 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
 
     private List<View> mViewList;
 
-    private StringBuilder positionNotOrder;
+    private List<Integer> positionNotOrder;
     private int numberHotFoodNotOrder = 0, numberColdFoodNotOrder = 0, numberSeeFoodNotOrder = 0, numberDrinkNotOrder = 0;
 
     //根据intent传入的user初始化该user
@@ -69,8 +71,9 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
             super.handleMessage(msg);
             if(msg.what == 1){
                 initOrderList();
-                numberTextView.setText(""+user.getPositioinOrder().length());
+                numberTextView.setText(""+user.getPositioinOrder().size());
                 priceTextView.setText(""+user.getTotalPrice());
+                user.initCommitedTag();
             }
         }
     };
@@ -78,6 +81,7 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setTitleColor(Color.parseColor("#ffffff"));
         setContentView(R.layout.food_order_view);
 
         mIntent = getIntent();
@@ -109,11 +113,11 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
                         user.setNumberSeeFoodNotOrder(numberSeeFoodNotOrder);
                         user.setNumberDrinkNotOrder(numberDrinkNotOrder);
                         user.setTotalPrice(notOrderTotalPrice);
-                        user.initCommitedTag();
+                        user.CommitedTag();
 
                         Toast.makeText(FoodOrderView.this,"提交订单成功",Toast.LENGTH_SHORT).show();
                         //把本地数据清空
-                        positionNotOrder = new StringBuilder();
+                        positionNotOrder.clear();
                         numberHotFoodNotOrder = 0;
                         numberColdFoodNotOrder = 0;
                         numberSeeFoodNotOrder = 0;
@@ -122,7 +126,6 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
 
                         //把User中已经点的菜清空
                         user.initTag();
-
                         initTotalPrice();
                         initNotOrderList();
                         initOrderList();
@@ -133,6 +136,7 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
                 }
             }
         });
+
 
     }
 
@@ -171,18 +175,18 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
      * 初始化总价
      */
     private void initTotalPrice(){
-        int i = 0;
+        int i =0;
         for(;i<numberHotFoodNotOrder;i++){
-            notOrderTotalPrice += FoodItems.hot_food_price[Integer.parseInt(""+positionNotOrder.charAt(i))];
+            notOrderTotalPrice += FoodItems.hot_food_price[positionNotOrder.get(i)] * user.getTagPositionHotFood(positionNotOrder.get(i));
         }
         for(;i<numberHotFoodNotOrder+numberColdFoodNotOrder;i++){
-            notOrderTotalPrice += FoodItems.cold_food_price[Integer.parseInt(""+positionNotOrder.charAt(i))];
+            notOrderTotalPrice += FoodItems.cold_food_price[positionNotOrder.get(i)] * user.getTagPositionColdFood(positionNotOrder.get(i));
         }
         for(;i<numberHotFoodNotOrder+numberColdFoodNotOrder+numberSeeFoodNotOrder;i++){
-            notOrderTotalPrice += FoodItems.see_food_price[Integer.parseInt(""+positionNotOrder.charAt(i))];
+            notOrderTotalPrice += FoodItems.see_food_price[positionNotOrder.get(i)] * user.getTagPositionSeeFood(positionNotOrder.get(i));
         }
         for(;i<numberHotFoodNotOrder+numberColdFoodNotOrder+numberSeeFoodNotOrder+numberDrinkNotOrder;i++){
-            notOrderTotalPrice += FoodItems.drink_price[Integer.parseInt(""+positionNotOrder.charAt(i))];
+            notOrderTotalPrice += FoodItems.drink_price[positionNotOrder.get(i)] * user.getTagPositionDrink(positionNotOrder.get(i));
         }
     }
 
@@ -193,32 +197,32 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
      */
     private void initPosition(){
 
-        positionNotOrder = new StringBuilder();
-        String temp = user.getTagHotFood().toString();
-        for(int i = 0; i<temp.length();i++){
-            if(temp.charAt(i) == '1'){
-                positionNotOrder.append(i);
+        positionNotOrder = new ArrayList<>();
+        int[] temp = user.getTagHotFood();
+        for(int i = 0; i<temp.length;i++){
+            if(temp[i]>0){
+                positionNotOrder.add(i);
                 numberHotFoodNotOrder++;
             }
         }
-        temp = user.getTagColdFood().toString();
-        for(int i = 0; i<temp.length();i++){
-            if(temp.charAt(i) == '1'){
-                positionNotOrder.append(i);
+        temp = user.getTagColdFood();
+        for(int i = 0; i<temp.length;i++){
+            if(temp[i]>0){
+                positionNotOrder.add(i);
                 numberColdFoodNotOrder++;
             }
         }
-        temp = user.getTagSeeFood().toString();
-        for(int i = 0; i<temp.length();i++){
-            if(temp.charAt(i) == '1'){
-                positionNotOrder.append(i);
+        temp = user.getTagSeeFood();
+        for(int i = 0; i<temp.length;i++){
+            if(temp[i]>0){
+                positionNotOrder.add(i);
                 numberSeeFoodNotOrder++;
             }
         }
-        temp = user.getTagDrink().toString();
-        for(int i = 0; i<temp.length();i++){
-            if(temp.charAt(i) == '1'){
-                positionNotOrder.append(i);
+        temp = user.getTagDrink();
+        for(int i = 0; i<temp.length;i++){
+            if(temp[i]>0){
+                positionNotOrder.add(i);
                 numberDrinkNotOrder++;
             }
         }
@@ -242,7 +246,7 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
 
             @Override
             public int getCount() {
-                return positionNotOrder.length();
+                return positionNotOrder.size();
             }
 
             @Override
@@ -266,28 +270,28 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
                 TextView textView_price = convertView.findViewById(R.id.have_ordered_item_price);
                 TextView textView_number =convertView.findViewById(R.id.have_ordered_item_number);
 
-                int pos = Integer.parseInt(""+positionNotOrder.charAt(position));
+                int pos = positionNotOrder.get(position);
 
                 if(position < numberHotFoodNotOrder){
                     imageView.setImageResource(FoodItems.hot_food_image[pos]);
                     textView_name.setText(FoodItems.hot_food_name[pos]);
                     textView_price.setText(""+FoodItems.hot_food_price[pos]);
-                    textView_number.setText("1 份");
+                    textView_number.setText(user.getTagPositionHotFood(pos)+" 份");
                 }else if(position < numberColdFoodNotOrder + numberHotFoodNotOrder){
                     imageView.setImageResource(FoodItems.cold_food_image[pos]);
                     textView_name.setText(FoodItems.cold_food_name[pos]);
                     textView_price.setText(""+FoodItems.cold_food_price[pos]);
-                    textView_number.setText("1 份");
+                    textView_number.setText(user.getTagPositionColdFood(pos)+" 份");
                 }else  if(position< numberColdFoodNotOrder + numberHotFoodNotOrder + numberSeeFoodNotOrder){
                     imageView.setImageResource(FoodItems.see_food_image[pos]);
                     textView_name.setText(FoodItems.see_food_name[pos]);
                     textView_price.setText(""+FoodItems.see_food_price[pos]);
-                    textView_number.setText("1 份");
+                    textView_number.setText(user.getTagPositionSeeFood(pos)+" 份");
                 }else{
                     imageView.setImageResource(FoodItems.drink_image[pos]);
                     textView_name.setText(FoodItems.drink_name[pos]);
                     textView_price.setText(""+FoodItems.drink_price[pos]);
-                    textView_number.setText("1 份");
+                    textView_number.setText(user.getTagPositionDrink(pos)+" 份");
                 }
 
                 return convertView;
@@ -308,7 +312,7 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
         orderListView.setAdapter(new BaseAdapter() {
             @Override
             public int getCount() {
-                return user.getPositioinOrder().length();
+                return user.getPositioinOrder().size();
             }
 
             @Override
@@ -333,33 +337,34 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
                 TextView textView_price = convertView.findViewById(R.id.have_ordered_item_price);
                 TextView textView_number =convertView.findViewById(R.id.have_ordered_item_number);
 
-                int pos = Integer.parseInt(""+user.getPositioinOrder().charAt(position));
+                int pos = user.getPositioinOrder().get(position);
 
                 if(position < user.getNumberHotFoodNotOrder()){
                     imageView.setImageResource(FoodItems.hot_food_image[pos]);
                     textView_name.setText(FoodItems.hot_food_name[pos]);
-                    textView_price.setText(""+FoodItems.hot_food_price[pos]);
-                    textView_number.setText("1 份");
+                    textView_price.setText(""+FoodItems.hot_food_price[pos]+" 元");
+                    textView_number.setText(user.getTagHotFoodCommited()[pos]+" 份");
                 }else if(position < user.getNumberColdFoodNotOrder() + user.getNumberHotFoodNotOrder()){
                     imageView.setImageResource(FoodItems.cold_food_image[pos]);
                     textView_name.setText(FoodItems.cold_food_name[pos]);
                     textView_price.setText(""+FoodItems.cold_food_price[pos]);
-                    textView_number.setText("1 份");
+                    textView_number.setText(user.getTagColdFoodCommited()[pos]+" 份");
                 }else  if(position<user.getNumberColdFoodNotOrder() + user.getNumberHotFoodNotOrder() + user.getNumberSeeFoodNotOrder()){
                     imageView.setImageResource(FoodItems.see_food_image[pos]);
                     textView_name.setText(FoodItems.see_food_name[pos]);
                     textView_price.setText(""+FoodItems.see_food_price[pos]);
-                    textView_number.setText("1 份");
+                    textView_number.setText(user.getTagSeeFoodCommited()[pos]+" 份");
                 }else{
                     imageView.setImageResource(FoodItems.drink_image[pos]);
                     textView_name.setText(FoodItems.drink_name[pos]);
                     textView_price.setText(""+FoodItems.drink_price[pos]);
-                    textView_number.setText("1 份");
+                    textView_number.setText(user.getTagDrinkCommited()[pos]+" 份");
                 }
 
                 return convertView;
             }
         });
+
     }
 
 
@@ -371,12 +376,12 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
     public void onTabSelected(TabLayout.Tab tab) {
         mViewPager.setCurrentItem(tab.getPosition());
         if(tab.getPosition() == NOTORDER){
-            numberTextView.setText(""+positionNotOrder.length());
+            numberTextView.setText(""+positionNotOrder.size());
             priceTextView.setText(""+notOrderTotalPrice);
             mButton.setText("提交订单");
             mButton.setBackgroundColor(Color.parseColor("#3498DB"));
         }else if(tab.getPosition() == ORDER){
-            numberTextView.setText(""+user.getPositioinOrder().length());
+            numberTextView.setText(""+user.getPositioinOrder().size());
             priceTextView.setText(""+user.getTotalPrice());
             mButton.setText("结账");
             mButton.setBackgroundColor(Color.parseColor("#2ECC71"));
@@ -503,7 +508,7 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
                 }
                 publishProgress(ratio);
             }
-            user.setPositioinOrder(new StringBuilder(""));
+            user.setPositioinOrder(new ArrayList<Integer>());
             user.setNumberHotFoodNotOrder(0);
             user.setNumberColdFoodNotOrder(0);
             user.setNumberSeeFoodNotOrder(0);
@@ -512,6 +517,12 @@ public class FoodOrderView extends AppCompatActivity implements TabLayout.OnTabS
             return strings[0];
         }
     }
+
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater menuInflater = getMenuInflater();
+
+        return super.onCreateOptionsMenu(menu);
+    }
 }
-
-

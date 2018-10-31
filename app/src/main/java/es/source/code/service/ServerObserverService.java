@@ -9,25 +9,18 @@ import android.os.IBinder;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.Xml;
 
-import org.greenrobot.eventbus.EventBus;
-import org.greenrobot.eventbus.EventBusBuilder;
-import org.greenrobot.eventbus.Subscribe;
 import org.json.JSONObject;
+import org.xmlpull.v1.XmlPullParser;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Random;
 
-import es.source.code.activity.FoodView;
-import es.source.code.model.EventBusMessage;
-import es.source.code.model.FoodItems;
+import es.source.code.util.Constant;
 
 public class ServerObserverService extends Service {
 
@@ -35,13 +28,8 @@ public class ServerObserverService extends Service {
 
     public static boolean ServiceRunningTag = false;
 
-    private static final String URLSTRING = "http://192.168.1.104:8080/SCOSServer/FoodUpdateService";
-
     //判断发送数据线程是否运行
     private boolean threadRunningTag = false;
-
-    //随机数产生器
-    private Random mRandom = new Random();
 
     //获得绑定的Activity的messenger
     Messenger activityMessenger;
@@ -76,12 +64,16 @@ public class ServerObserverService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
-        System.out.println("create0-------------------------");
         ServiceRunningTag = true;
         threadRun();
     }
 
 
+    @Override
+    public boolean onUnbind(Intent intent) {
+        threadRunningTag = false;
+        return super.onUnbind(intent);
+    }
 
     @Override
     public void onDestroy() {
@@ -101,49 +93,53 @@ public class ServerObserverService extends Service {
                 while(ServiceRunningTag){
 
                     if(threadRunningTag) {
-                        JSONObject jsonObject;
-                        int type = 1,pos = 0,storage = 0,price = 0;
-                        try {
-                            jsonObject = httpGet();
-                            //四种类型的菜
-                            type = jsonObject.getInt("type");
-                            //在选中的菜品中的位置
-                            pos = jsonObject.getInt("pos");
-                            //库存量
-                            storage = jsonObject.getInt("storage");
-                            //价格
-                            price = jsonObject.getInt("price");
-                        } catch (Exception e) {
-                            e.printStackTrace();
+
+                            Message message = new Message();
+                            JSONObject jsonObject;
+                            int type = 1,pos = 0,storage = 0,price = 0;
+                            try {
+                                jsonObject = httpGet();
+                                //四种类型的菜
+                                type = jsonObject.getInt("type");
+                                //在选中的菜品中的位置
+                                pos = jsonObject.getInt("pos");
+                                //库存量
+                                storage = jsonObject.getInt("storage");
+                                //价格
+                                price = jsonObject.getInt("price");
+
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+
+
+                            //打包数据
+                            Bundle bundle = new Bundle();
+                            bundle.putInt("type", type);
+                            bundle.putInt("pos", pos);
+                            bundle.putInt("storage", storage);
+                            bundle.putInt("price",price);
+
+                            message.setData(bundle);
+                            message.what = 10;
+
+                            //发送数据
+                            try {
+                                activityMessenger.send(message);
+                            } catch (RemoteException e) {
+                                e.printStackTrace();
+                            }
+
+                            //启用updateService
+                            Intent intent = new Intent(ServerObserverService.this, UpdateService.class);
+                            intent.putExtra("message", bundle);
+                            intent.putExtra("tag","startSCOSEntry");
+                            startService(intent);
                         }
-
-                        Message message = new Message();
-
-                        //打包数据
-                        Bundle bundle = new Bundle();
-                        bundle.putInt("type", type);
-                        bundle.putInt("pos", pos);
-                        bundle.putInt("storage", storage);
-                        bundle.putInt("price",price);
-
-                        message.setData(bundle);
-                        message.what = 10;
-
-                        //发送数据
-                        try {
-                            activityMessenger.send(message);
-                        } catch (RemoteException e) {
-                            e.printStackTrace();
-                        }
-
-                        //启用updateService
-                        Intent intent = new Intent(ServerObserverService.this,UpdateService.class);
-                        intent.putExtra("message",bundle);
-                        startService(intent);
-                    }
                     //休眠3000ms
                     try {
-                        Thread.sleep(6000);
+
+                        Thread.sleep(3000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
@@ -152,9 +148,55 @@ public class ServerObserverService extends Service {
         }).start();
     }
 
+
+    private Bundle httpXML() throws Exception {
+        Bundle bundle = new Bundle();
+        String type = "" , pos= "" ,storage= "" ,price = "";
+
+        URL url = new URL(Constant.URLUpdateXML);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+
+        InputStream in = connection.getInputStream();
+        XmlPullParser parser = Xml.newPullParser();
+        parser.setInput(in,"UTF-8");
+
+        //开始解析
+        int event = parser.getEventType();
+        while(event != XmlPullParser.END_DOCUMENT){
+            switch (event){
+                case XmlPullParser.START_TAG:
+                    if("type".equals(parser.getName())){
+                        type = parser.nextText();
+                    }
+                    if("pos".equals(parser.getName())){
+                        pos = parser.nextText();
+                    }
+                    if("storage".equals(parser.getName())){
+                        storage = parser.nextText();
+                    }
+                    if("price".equals(parser.getName())){
+                        price = parser.nextText();
+                    }
+                    break;
+                case XmlPullParser.END_TAG:
+                    break;
+            }
+            event = parser.next();
+        }
+
+        bundle.putInt("type",Integer.parseInt(type));
+        bundle.putInt("pos",Integer.parseInt(pos));
+        bundle.putInt("price",Integer.parseInt(price));
+        bundle.putInt("storage",Integer.parseInt(storage));
+        return bundle;
+    }
+
+
+
     private JSONObject httpGet() throws Exception {
         //网络连接的建立
-        URL url = new URL(URLSTRING);
+        URL url = new URL(Constant.URLUpdate);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setDoInput(true);
         connection.setDoOutput(true);
