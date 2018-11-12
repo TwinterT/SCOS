@@ -36,10 +36,10 @@ public class UpdateService extends IntentService {
         //获取intent中的数据
         Bundle bundle = intent.getBundleExtra("message");
         String tag = intent.getStringExtra("tag");
-        if(tag == null){
+        if(tag.equals("startSCOSEntry")){
         //发送接收到库存更新信息
             sendRemoteMessage(bundle);
-        }else if(tag.equals("startSCOSEntry")){
+        }else if(tag.equals("phoneStarted")){
             //发送接收到开机启动完成信息
 //            Bundle testBundle = new Bundle();
 //            testBundle.putInt("type",1);

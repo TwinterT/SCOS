@@ -22,7 +22,7 @@ public class DeviceStartedListener extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         if(intent.getAction().equals(Intent.ACTION_BOOT_COMPLETED)){
             Intent serviceIntent = new Intent(context, UpdateService.class);
-            serviceIntent.putExtra("tag","startSCOSEntry");
+            serviceIntent.putExtra("tag","phoneStarted");
 
             //安卓8.0如果要启动服务
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
